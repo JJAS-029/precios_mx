@@ -1,15 +1,15 @@
-package mx.preciojusto.app
+package mx.acomo.app
 
 import kotlinx.serialization.json.Json
-import mx.preciojusto.app.data.DatosPrecios
-import mx.preciojusto.app.data.PrecioSemana
-import mx.preciojusto.app.data.Producto
-import mx.preciojusto.app.data.Semaforo
-import mx.preciojusto.app.data.coincide
-import mx.preciojusto.app.data.etiquetaSemana
-import mx.preciojusto.app.data.evaluarPrecio
-import mx.preciojusto.app.data.pesos
-import mx.preciojusto.app.data.resumen
+import mx.acomo.app.data.DatosPrecios
+import mx.acomo.app.data.PrecioSemana
+import mx.acomo.app.data.Producto
+import mx.acomo.app.data.Semaforo
+import mx.acomo.app.data.coincide
+import mx.acomo.app.data.etiquetaSemana
+import mx.acomo.app.data.evaluarPrecio
+import mx.acomo.app.data.pesos
+import mx.acomo.app.data.resumen
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

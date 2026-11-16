@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PrecioJusto"
+rootProject.name = "Acomo"
 include(":app")

@@ -1,4 +1,4 @@
-package mx.preciojusto.app.ui
+package mx.acomo.app.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,17 +30,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import mx.preciojusto.app.data.DatosPrecios
-import mx.preciojusto.app.data.Producto
-import mx.preciojusto.app.data.Semaforo
-import mx.preciojusto.app.data.etiquetaSemana
-import mx.preciojusto.app.data.evaluarPrecio
-import mx.preciojusto.app.data.nombreVisible
-import mx.preciojusto.app.data.pesos
-import mx.preciojusto.app.data.porcentaje
-import mx.preciojusto.app.data.resumen
-import mx.preciojusto.app.data.serie
-import mx.preciojusto.app.ui.theme.ColoresSemaforo
+import mx.acomo.app.data.DatosPrecios
+import mx.acomo.app.data.Producto
+import mx.acomo.app.data.Semaforo
+import mx.acomo.app.data.etiquetaSemana
+import mx.acomo.app.data.evaluarPrecio
+import mx.acomo.app.data.nombreVisible
+import mx.acomo.app.data.pesos
+import mx.acomo.app.data.porcentaje
+import mx.acomo.app.data.resumen
+import mx.acomo.app.data.serie
+import mx.acomo.app.ui.theme.ColoresSemaforo
 
 private const val SEMANAS_GRAFICA = 12
 

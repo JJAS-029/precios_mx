@@ -1,4 +1,4 @@
-package mx.preciojusto.app.ui.theme
+package mx.acomo.app.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -22,7 +22,7 @@ val ColorSube = Color(0xFFC62828)
 val ColorBaja = Color(0xFF2E7D32)
 
 @Composable
-fun TemaPrecioJusto(content: @Composable () -> Unit) {
+fun TemaAcomo(content: @Composable () -> Unit) {
     val colores = if (isSystemInDarkTheme()) {
         darkColorScheme(primary = VerdeClaro, secondary = VerdeClaro)
     } else {

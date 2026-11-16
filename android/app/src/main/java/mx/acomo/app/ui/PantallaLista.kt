@@ -1,4 +1,4 @@
-package mx.preciojusto.app.ui
+package mx.acomo.app.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,14 +33,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import mx.preciojusto.app.data.Producto
-import mx.preciojusto.app.data.Resumen
-import mx.preciojusto.app.data.coincide
-import mx.preciojusto.app.data.etiquetaSemana
-import mx.preciojusto.app.data.nombreVisible
-import mx.preciojusto.app.data.pesos
-import mx.preciojusto.app.data.porcentaje
-import mx.preciojusto.app.data.resumen
+import mx.acomo.app.data.Producto
+import mx.acomo.app.data.Resumen
+import mx.acomo.app.data.coincide
+import mx.acomo.app.data.etiquetaSemana
+import mx.acomo.app.data.nombreVisible
+import mx.acomo.app.data.pesos
+import mx.acomo.app.data.porcentaje
+import mx.acomo.app.data.resumen
 
 /** Un producto "está barato" si su precio está al menos 8 % abajo de su promedio de 8 semanas. */
 private const val UMBRAL_BARATO = -8.0
@@ -61,7 +61,7 @@ fun PantallaLista(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Precio Justo")
+                        Text("¿A cómo?")
                         datos?.semanas?.lastOrNull()?.let {
                             Text(
                                 "Mayoreo, semana del ${etiquetaSemana(it)}",

@@ -1,4 +1,4 @@
-# Plan de Proyecto: App "Precio Justo" (Bolsa de Valores Agrícola)
+# Plan de Proyecto: App "¿A cómo?" (Bolsa de Valores Agrícola)
 
 ## 1. Visión general
 App móvil (B2C) para combatir la asimetría de información en precios de frutas, verduras y básicos. El usuario consulta si el precio que le ofrecen en el mercado o tianguis es razonable, comparándolo con los precios oficiales de las Centrales de Abasto.

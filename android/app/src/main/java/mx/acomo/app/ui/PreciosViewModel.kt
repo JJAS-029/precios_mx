@@ -1,4 +1,4 @@
-package mx.preciojusto.app.ui
+package mx.acomo.app.ui
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mx.preciojusto.app.BuildConfig
-import mx.preciojusto.app.data.DatosPrecios
-import mx.preciojusto.app.data.Repositorio
+import mx.acomo.app.BuildConfig
+import mx.acomo.app.data.DatosPrecios
+import mx.acomo.app.data.Repositorio
 import java.io.File
 
 data class EstadoUi(

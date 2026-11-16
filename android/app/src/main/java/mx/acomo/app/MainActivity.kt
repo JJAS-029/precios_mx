@@ -1,4 +1,4 @@
-package mx.preciojusto.app
+package mx.acomo.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -12,17 +12,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import mx.preciojusto.app.ui.PantallaDetalle
-import mx.preciojusto.app.ui.PantallaLista
-import mx.preciojusto.app.ui.PreciosViewModel
-import mx.preciojusto.app.ui.theme.TemaPrecioJusto
+import mx.acomo.app.ui.PantallaDetalle
+import mx.acomo.app.ui.PantallaLista
+import mx.acomo.app.ui.PreciosViewModel
+import mx.acomo.app.ui.theme.TemaAcomo
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            TemaPrecioJusto { App() }
+            TemaAcomo { App() }
         }
     }
 }

@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "mx.preciojusto.app"
+    namespace = "mx.acomo.app"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "mx.preciojusto.app"
+        applicationId = "mx.acomo.app"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

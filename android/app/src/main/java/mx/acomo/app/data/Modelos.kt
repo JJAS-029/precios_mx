@@ -1,4 +1,4 @@
-package mx.preciojusto.app.data
+package mx.acomo.app.data
 
 import kotlinx.serialization.Serializable
 

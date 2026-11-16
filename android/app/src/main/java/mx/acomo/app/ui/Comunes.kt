@@ -1,4 +1,4 @@
-package mx.preciojusto.app.ui
+package mx.acomo.app.ui
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -12,9 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import mx.preciojusto.app.data.porcentaje
-import mx.preciojusto.app.ui.theme.ColorBaja
-import mx.preciojusto.app.ui.theme.ColorSube
+import mx.acomo.app.data.porcentaje
+import mx.acomo.app.ui.theme.ColorBaja
+import mx.acomo.app.ui.theme.ColorSube
 import kotlin.math.abs
 
 /** "Central de Abasto de Toluca" -> "Toluca". */

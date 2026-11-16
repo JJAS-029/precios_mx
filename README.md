@@ -1,6 +1,6 @@
 # precios_mx
 
-Precios de referencia de frutas y verduras en centrales de abasto de México, para saber si lo que te cobran en el mercado es razonable.
+**¿A cómo?** — precios de referencia de frutas y verduras en centrales de abasto de México, para saber si lo que te cobran en el mercado es razonable.
 
 Fuente: [SNIIM](http://www.economia-sniim.gob.mx/) (Secretaría de Economía), precios de mayoreo en pesos por kg.
 
