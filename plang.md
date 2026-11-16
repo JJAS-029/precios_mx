@@ -92,6 +92,11 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
 * **Anuncios:** banner adaptable de AdMob al pie de la lista de productos, solo sin Plus. Por ahora con los **IDs de prueba de Google**.
 * Plus se guarda en el teléfono; en la versión de desarrollo hay un interruptor "Activar Plus de prueba". La compra real llega en la Fase 4.
 
+### ✅ Fase 3.9: Equivalencias
+* En el detalle: tarjeta "También te sirve" con sustitutos del mismo mercado, ordenados por qué tan baratos están contra su propio promedio. Si el producto está ≥15 % arriba de su promedio y hay uno ≥5 % abajo, cambia a "💡 Está caro, mejor cambia".
+* En la lista: sección "Está caro, mejor cambia" con hasta 3 cambios (p. ej. Toluca: col +35 % → lechuga; Iztapalapa: limón sin semilla +19 % → limón con semilla −22 %).
+* Grupos automáticos por variedad (misma primera palabra; sin juntar tamaños como "# 4" y "# 5") y grupos manuales por uso en `Analisis.kt` (salsa, rajas, chile picoso, chile seco, pimiento, jugo, limón, ensalada, brócoli/coliflor, papa/camote, guisado, durazno/nectarina).
+
 ### 💰 Modelo de monetización
 * **Gratis con anuncios:** un solo banner en la pantalla principal. Nada de anuncios de pantalla completa ni en la pantalla de detalle (es la que se usa frente al puesto).
 * **Plus, pago único** (sugerido $29–49 MXN, por definir): quita anuncios y desbloquea temas. Más adelante podría incluir funciones extra (avisos de precio, varias listas de mandado), pero las funciones de precios básicas siempre gratis.
@@ -110,7 +115,7 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
 ### Fase 5: Funciones que suman (ideas del 2026-11-16)
 Ordenadas de más fácil a más trabajo:
 
-1. **Equivalencias / sustitutos.** "El jitomate está caro esta semana; el tomate verde está 30 % abajo de su promedio". Tabla manual de sustitutos (jitomate ↔ tomate verde, limón con semilla ↔ sin semilla, papa ↔ camote, chile poblano ↔ chilaca, calabacita italiana ↔ criolla, naranja ↔ mandarina para jugo…) y se sugiere el que esté más barato contra su promedio. Solo usa datos que ya tenemos.
+1. ~~Equivalencias / sustitutos~~ ✅ (Fase 3.9). Pendiente: ampliar la tabla con lo que digan los usuarios.
 2. **Calculadora / carrito de presupuesto.** El usuario arma su lista ("2 kg jitomate, 1 kg cebolla, 3 aguacates…") y ve el costo estimado al menudeo (mayoreo × factor), con total y semáforo por producto. Para piezas (aguacate, piña, lechuga) hace falta un peso promedio por pieza. Guardar listas frecuentes ("mandado de la semana").
 3. **Productos de temporada.** Con el historial de 52 semanas se calcula en qué meses cada producto suele estar más barato. Sección "De temporada este mes" y aviso del tipo "Empieza la temporada de mandarina".
 4. **Avisos de precios bajos.** El usuario marca productos favoritos y recibe una notificación cuando bajan cierto % o están abajo de su promedio. Se puede hacer local: WorkManager revisa los datos nuevos cada miércoles y lanza una notificación, sin servidor. Requiere permiso de notificaciones (Android 13+).

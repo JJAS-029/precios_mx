@@ -11,7 +11,10 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -72,8 +75,15 @@ object ColoresSemaforo {
 }
 
 /** Subió de precio = malo para el comprador (rojo); bajó = bueno (verde). */
-val ColorSube = Color(0xFFD32F2F)
-val ColorBaja = Color(0xFF2E7D32)
+val ColorSube: Color
+    @Composable @ReadOnlyComposable get() = if (fondoOscuro()) Color(0xFFFF8A80) else Color(0xFFC62828)
+val ColorBaja: Color
+    @Composable @ReadOnlyComposable get() = if (fondoOscuro()) Color(0xFF81C784) else Color(0xFF2E7D32)
+
+/** Si el tema activo es oscuro (sirve también cuando el usuario forzó claro u oscuro). */
+@Composable
+@ReadOnlyComposable
+private fun fondoOscuro(): Boolean = MaterialTheme.colorScheme.surface.luminance() < 0.5f
 
 /** Paletas de color. Solo [VERDE] es gratuita; las demás son parte de ¿A cómo? Plus. */
 enum class EstiloColor(val nombre: String, val muestra: Color, val plus: Boolean) {

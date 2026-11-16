@@ -93,6 +93,91 @@ fun Producto.resumen(): Resumen? {
     return Resumen(actual, cambio, ult8.sumOf { it.frec } / ult8.size)
 }
 
+// ------------------------------------------------------------------ equivalencias / sustitutos
+
+/**
+ * Grupos de productos que se pueden usar uno por otro, con el motivo que se muestra.
+ * Se comparan contra el nombre normalizado + " " (por eso "papa " no incluye "papaya").
+ * Además, las variedades de un mismo producto (misma primera palabra) son sustitutos automáticos.
+ */
+private val GRUPOS_SUSTITUTOS: List<Pair<String, List<String>>> = listOf(
+    "para salsa" to listOf("tomate saladette", "tomate bola", "tomate verde"),
+    "para rajas o rellenar" to listOf("chile poblano", "chile chilaca", "chile anaheim"),
+    "chile picoso" to listOf("chile serrano", "chile jalapeno", "chile de arbol fresco", "chile caribe", "chile habanero"),
+    "chile seco" to listOf("chile guajillo", "chile ancho", "chile pasilla", "chile puya", "chile de arbol seco", "chile mirasol"),
+    "pimiento" to listOf("chile pimiento", "chile california", "chile dulce"),
+    "para jugo" to listOf("naranja ", "mandarina", "toronja"),
+    "limón" to listOf("limon", "lima "),
+    "para ensalada" to listOf("lechuga", "col "),
+    "brócoli o coliflor" to listOf("brocoli", "coliflor"),
+    "papa o camote" to listOf("papa ", "camote"),
+    "para guisado" to listOf("calabacita", "chayote"),
+    "durazno o nectarina" to listOf("durazno", "nectarina"),
+)
+
+/** Primeras palabras que NO agrupan variedades automáticamente (son productos muy distintos). */
+private val SIN_GRUPO_AUTOMATICO = setOf("chile", "nuez", "calabaza", "cana")
+
+/** Motivo de cada grupo al que pertenece el producto. "otra variedad" para el grupo automático. */
+fun Producto.gruposSustitutos(): Map<String, String> {
+    val n = normalizar(nombre) + " "
+    val grupos = mutableMapOf<String, String>()
+    GRUPOS_SUSTITUTOS.forEach { (motivo, prefijos) ->
+        if (prefijos.any { n.startsWith(it) }) grupos[motivo] = motivo
+    }
+    val primera = n.substringBefore(' ')
+    // "Ciruela pasa" o "Uva pasa" no sustituyen a la fruta fresca.
+    if (primera !in SIN_GRUPO_AUTOMATICO && " pasa " !in n) grupos["auto:$primera"] = "otra variedad"
+    return grupos
+}
+
+/** Nombre sin tamaño ni clasificación: "Limón c/semilla # 4" y "# 5" son el mismo producto. */
+private val TAMANOS = Regex("""\s*(#\s*\d+|\bsin clasificacion\b|\bgrande\b|\bmedian[ao]\b|\bchic[ao]\b)""")
+fun Producto.nombreBase(): String = normalizar(nombre).replace(TAMANOS, "").trim()
+
+data class Alternativa(val producto: Producto, val resumen: Resumen, val motivo: String)
+
+/**
+ * Productos del mismo mercado que pueden sustituir a [producto], del más barato
+ * (contra su propio promedio) al más caro. Solo con datos de la misma semana o más recientes.
+ */
+fun alternativas(producto: Producto, todos: List<Producto>, max: Int = 4): List<Alternativa> {
+    val propio = producto.resumen() ?: return emptyList()
+    val grupos = producto.gruposSustitutos()
+    if (grupos.isEmpty()) return emptyList()
+    return todos.asSequence()
+        .filter { it.nombreBase() != producto.nombreBase() }
+        .mapNotNull { otro ->
+            val comunes = otro.gruposSustitutos().keys.intersect(grupos.keys)
+            val motivo = comunes.firstOrNull { !it.startsWith("auto:") } ?: comunes.firstOrNull() ?: return@mapNotNull null
+            val r = otro.resumen()?.takeIf { it.actual.semana >= propio.actual.semana } ?: return@mapNotNull null
+            Alternativa(otro, r, grupos.getValue(motivo))
+        }
+        // Una sola calidad por producto: la más barata.
+        .groupBy { it.producto.nombreBase() }.values.map { v -> v.minBy { it.resumen.actual.frec } }
+        .sortedBy { it.resumen.vsPromedio }
+        .take(max)
+}
+
+/** "Está caro, mejor compra…": un producto caro contra su promedio y una alternativa barata. */
+data class SugerenciaCambio(val caro: Producto, val resumenCaro: Resumen, val alternativa: Alternativa) {
+    val ventaja: Double get() = resumenCaro.vsPromedio - alternativa.resumen.vsPromedio
+}
+
+const val UMBRAL_CARO = 15.0
+const val UMBRAL_ALTERNATIVA = -5.0
+
+fun sugerenciasCambio(todos: List<Producto>, max: Int = 3): List<SugerenciaCambio> =
+    todos.mapNotNull { p ->
+        val r = p.resumen()?.takeIf { it.vsPromedio >= UMBRAL_CARO } ?: return@mapNotNull null
+        val alt = alternativas(p, todos).firstOrNull()?.takeIf { it.resumen.vsPromedio <= UMBRAL_ALTERNATIVA }
+            ?: return@mapNotNull null
+        SugerenciaCambio(p, r, alt)
+    }
+        .sortedByDescending { it.ventaja }
+        .distinctBy { it.caro.nombre }
+        .take(max)
+
 // ------------------------------------------------------------------ mercados
 
 /** Distancia aproximada en km entre dos puntos (fórmula del haversine). */

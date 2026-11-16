@@ -14,6 +14,8 @@ import mx.acomo.app.data.etiquetaSemana
 import mx.acomo.app.data.evaluarPrecio
 import mx.acomo.app.data.pesos
 import mx.acomo.app.data.resumen
+import mx.acomo.app.data.alternativas
+import mx.acomo.app.data.sugerenciasCambio
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -39,6 +41,50 @@ class AnalisisTest {
         assertFalse(jitomate.coincide("aguacate"))
         val limon = jitomate.copy(nombre = "Limón s/semilla")
         assertTrue(limon.coincide("limon"))
+    }
+
+    /** Producto con 8 semanas a [base] y la última a [actual]. */
+    private fun prod(nombre: String, base: Double, actual: Double, categoria: String = "Hortalizas") = Producto(
+        id = normalizarId(nombre), nombre = nombre, calidad = "Primera", categoria = categoria,
+        semanas = (39..45).map { PrecioSemana("2026-W$it", null, null, base, 5) } +
+            PrecioSemana("2026-W46", null, null, actual, 5),
+    )
+    private fun normalizarId(n: String) = n.lowercase().replace(' ', '-')
+
+    @Test fun equivalencias() {
+        val saladette = prod("Tomate Saladette", 30.0, 45.0)   // caro
+        val verde = prod("Tomate Verde", 20.0, 14.0)           // barato
+        val bola = prod("Tomate Bola", 30.0, 33.0)
+        val papa = prod("Papa Alpha", 18.0, 18.0)
+        val papaya = prod("Papaya Maradol", 20.0, 15.0, "Frutas")
+        val camote = prod("Camote", 15.0, 12.0)
+        val todos = listOf(saladette, verde, bola, papa, papaya, camote)
+
+        val alts = alternativas(saladette, todos)
+        assertEquals(listOf("Tomate Verde", "Tomate Bola"), alts.map { it.producto.nombre })
+        assertEquals("para salsa", alts.first().motivo)
+
+        // "papa " no debe confundirse con "papaya"
+        assertEquals(listOf("Camote"), alternativas(papa, todos).map { it.producto.nombre })
+
+        val cambios = sugerenciasCambio(todos)
+        assertEquals(1, cambios.size)
+        assertEquals("Tomate Saladette", cambios[0].caro.nombre)
+        assertEquals("Tomate Verde", cambios[0].alternativa.producto.nombre)
+
+        // Ciruela pasa no sustituye a la ciruela fresca; los chiles no se agrupan por "chile".
+        val ciruela = prod("Ciruela Roja", 30.0, 30.0, "Frutas")
+        val pasa = prod("Ciruela pasa", 80.0, 60.0, "Frutas")
+        assertTrue(alternativas(ciruela, listOf(ciruela, pasa)).isEmpty())
+        val serrano = prod("Chile Serrano", 30.0, 30.0)
+        val guajillo = prod("Chile Guajillo", 90.0, 80.0, "Chiles secos")
+        assertTrue(alternativas(serrano, listOf(serrano, guajillo)).isEmpty())
+
+        // Tamaños del mismo producto no son alternativas entre sí.
+        val limon4 = prod("Limón c/semilla # 4", 20.0, 25.0)
+        val limon5 = prod("Limón c/semilla # 5", 18.0, 15.0)
+        val sinSemilla = prod("Limón s/semilla", 22.0, 20.0)
+        assertEquals(listOf("Limón s/semilla"), alternativas(limon4, listOf(limon4, limon5, sinSemilla)).map { it.producto.nombre })
     }
 
     @Test fun resumenPorMercado() {

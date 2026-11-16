@@ -37,6 +37,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import mx.acomo.app.data.Indice
 import mx.acomo.app.data.Mercado
+import mx.acomo.app.data.Alternativa
 import mx.acomo.app.data.cercanos
 import mx.acomo.app.data.Producto
 import mx.acomo.app.data.Semaforo
@@ -62,6 +63,9 @@ fun PantallaDetalle(
     /** Fecha (AAAA-MM-DD) del dato más reciente del mercado. */
     fechaDatos: String,
     onGuardarPrecio: (precio: Double, mayoreo: Double, lugar: String) -> Unit,
+    /** Sustitutos en el mismo mercado (ver [mx.acomo.app.data.alternativas]). */
+    alternativas: List<Alternativa>,
+    onAbrirProducto: (String) -> Unit,
     onVolver: () -> Unit,
 ) {
     Scaffold(
@@ -139,6 +143,9 @@ fun PantallaDetalle(
             TarjetaSemaforo(producto, r.actual.frec, ultimoLugar) { precio, lugar ->
                 onGuardarPrecio(precio, r.actual.frec, lugar)
             }
+
+            // ----- equivalencias
+            TarjetaAlternativas(producto, r, alternativas, onAbrirProducto)
 
             // ----- gráfica
             Tarjeta {

@@ -63,6 +63,7 @@ import mx.acomo.app.data.nombreVisible
 import mx.acomo.app.data.pesos
 import mx.acomo.app.data.porcentaje
 import mx.acomo.app.data.resumen
+import mx.acomo.app.data.sugerenciasCambio
 
 /** Un producto "está barato" si su precio está al menos 8 % abajo de su promedio de 8 semanas. */
 private const val UMBRAL_BARATO = -8.0
@@ -124,6 +125,7 @@ fun PantallaLista(
         val filtrados = remember(conResumen, busqueda) {
             conResumen.filter { it.first.coincide(busqueda) }
         }
+        val cambios = remember(datos) { sugerenciasCambio(datos.productos) }
         val baratos = remember(conResumen) {
             conResumen.filter { it.second.vsPromedio <= UMBRAL_BARATO }
                 .sortedBy { it.second.vsPromedio }
@@ -172,6 +174,12 @@ fun PantallaLista(
                             }
                         }
                     }
+                }
+                if (busqueda.isBlank() && cambios.isNotEmpty()) {
+                    item { Encabezado("Está caro, mejor cambia") }
+                    item { SeccionCambios(cambios, onAbrirProducto) }
+                }
+                if (busqueda.isBlank() && (baratos.isNotEmpty() || cambios.isNotEmpty())) {
                     item { Encabezado("Todos los productos") }
                 }
 
