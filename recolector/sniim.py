@@ -159,11 +159,11 @@ def agregar_semanas(filas: list[dict]) -> tuple[dict, dict]:
     return semanas, info
 
 
-def leer_mercado(mid: str) -> tuple[dict, dict]:
-    """Historial guardado de un mercado: ({pid: {semana: datos}}, {pid: info})."""
+def leer_mercado(mid: str) -> tuple[dict, dict, str]:
+    """Historial guardado de un mercado: ({pid: {semana: datos}}, {pid: info}, ultima_fecha)."""
     archivo = DIR_MERCADOS / f"{mid}.json"
     if not archivo.exists():
-        return defaultdict(dict), {}
+        return defaultdict(dict), {}, ""
     datos = json.loads(archivo.read_text(encoding="utf-8"))
     semanas: dict[str, dict] = defaultdict(dict)
     info = {}
@@ -171,10 +171,10 @@ def leer_mercado(mid: str) -> tuple[dict, dict]:
         info[p["id"]] = {k: p[k] for k in ("id", "nombre", "calidad", "categoria")}
         for s in p["semanas"]:
             semanas[p["id"]][s["semana"]] = s
-    return semanas, info
+    return semanas, info, datos.get("ultimaFecha", "")
 
 
-def guardar_mercado(mid: str, semanas: dict, info: dict) -> dict:
+def guardar_mercado(mid: str, semanas: dict, info: dict, ultima_fecha: str) -> dict:
     todas = sorted({s for ps in semanas.values() for s in ps})[-SEMANAS_GUARDADAS:]
     validas = set(todas)
     productos = []
@@ -187,6 +187,7 @@ def guardar_mercado(mid: str, semanas: dict, info: dict) -> dict:
         "version": VERSION,
         "mercado": mid,
         "generado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "ultimaFecha": ultima_fecha,
         "unidad": "MXN/kg",
         "semanas": todas,
         "productos": productos,
@@ -211,7 +212,8 @@ def generar_indice(mercados: list[dict]) -> dict:
         if not datos["productos"]:
             continue
         sem = datos["semanas"][-1] if datos["semanas"] else ""
-        con_datos.append({**m, "ultimaSemana": sem, "productos": len(datos["productos"])})
+        con_datos.append({**m, "ultimaSemana": sem, "ultimaFecha": datos.get("ultimaFecha", ""),
+                          "productos": len(datos["productos"])})
         ultima_semana = max(ultima_semana, sem)
         for p in datos["productos"]:
             productos.setdefault(p["id"], {k: p[k] for k in ("id", "nombre", "calidad", "categoria")})
@@ -262,7 +264,9 @@ def main() -> None:
                 filas += descargar(m["id"], inicio, fin, sesion)
                 inicio = fin + timedelta(days=1)
                 time.sleep(1)  # ser amables con el servidor
-            semanas, info = leer_mercado(m["id"])
+            semanas, info, ultima_fecha = leer_mercado(m["id"])
+            if filas:
+                ultima_fecha = max(ultima_fecha, max(f["fecha"] for f in filas).isoformat())
             nuevas, info_nueva = agregar_semanas(filas)
             info.update(info_nueva)
             for pid, ps in nuevas.items():
@@ -270,7 +274,7 @@ def main() -> None:
             if not semanas:
                 print(f"{m['ciudad']} ({m['id']}): sin datos")
                 continue
-            salida = guardar_mercado(m["id"], semanas, info)
+            salida = guardar_mercado(m["id"], semanas, info, ultima_fecha)
             print(f"{m['ciudad']} ({m['id']}): {len(filas)} filas -> "
                   f"{len(salida['productos'])} productos, {len(salida['semanas'])} semanas")
 
