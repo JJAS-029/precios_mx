@@ -30,6 +30,8 @@ fun TemaAcomo(content: @Composable () -> Unit) {
             primaryContainer = Color(0xFF1B5E20),
             secondaryContainer = Color(0xFF2E4A30),
             onSecondaryContainer = Color(0xFFDCEFD9),
+            background = Color(0xFF121512),
+            surface = Color(0xFF121512),
             surfaceVariant = Color(0xFF2A2F2A),
             surfaceContainerHighest = Color(0xFF2A2F2A),
         )

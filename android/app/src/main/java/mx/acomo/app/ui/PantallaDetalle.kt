@@ -196,9 +196,10 @@ private fun TarjetaSemaforo(
                 colors = CardDefaults.cardColors(containerColor = color),
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
             ) {
+                val textoSemaforo = if (ev.semaforo == Semaforo.AMARILLO) Color(0xFF2B1D00) else Color.White
                 Column(Modifier.padding(12.dp)) {
-                    Text(titulo, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(detalle, color = Color.White)
+                    Text(titulo, color = textoSemaforo, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(detalle, color = textoSemaforo)
                 }
             }
             Text(
