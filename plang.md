@@ -64,6 +64,11 @@ Carpeta `android/`: Kotlin, Jetpack Compose, minSdk 26, compileSdk 37.
 * Detalle: precio de la semana, cambio semanal, promedio de 8 semanas, semáforo, gráfica de 12 semanas (Canvas) y comparación entre mercados.
 * Pruebas unitarias en `app/src/test` (incluyen leer el JSON real).
 
+### Fase 3.5: Identidad y "Mis precios" ✅
+* Logo del koala (`diseno/logo_original.jpg`); íconos generados con `diseno/generar_iconos.py`. Ícono para Google Play: `diseno/play_store_512.png`.
+* La app recuerda el último mercado elegido.
+* "Mis precios": guardar lo que pagaste (precio, lugar, fecha) contra el mayoreo de la semana; se puede compartir como CSV para calibrar el semáforo.
+
 ### Fase 4: MVP (parcialmente adelantado en la Fase 3)
 * **Buscador** con tolerancia a acentos y sinónimos ("jitomate" → Tomate Saladette/Bola).
 * **Detalle de producto:** precio de la semana, tendencia contra la semana anterior y gráfica de 12 semanas (Vico).

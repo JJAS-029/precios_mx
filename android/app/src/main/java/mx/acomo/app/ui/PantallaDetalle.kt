@@ -15,6 +15,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -50,7 +51,9 @@ fun PantallaDetalle(
     datos: DatosPrecios,
     producto: Producto,
     mercado: String,
+    ultimoLugar: String,
     onElegirMercado: (String) -> Unit,
+    onGuardarPrecio: (precio: Double, mayoreo: Double, lugar: String) -> Unit,
     onVolver: () -> Unit,
 ) {
     Scaffold(
@@ -108,7 +111,9 @@ fun PantallaDetalle(
             }
 
             // ----- semáforo
-            TarjetaSemaforo(producto, r.actual.frec)
+            TarjetaSemaforo(producto, r.actual.frec, ultimoLugar) { precio, lugar ->
+                onGuardarPrecio(precio, r.actual.frec, lugar)
+            }
 
             // ----- gráfica
             Tarjeta {
@@ -147,8 +152,15 @@ fun PantallaDetalle(
 }
 
 @Composable
-private fun TarjetaSemaforo(producto: Producto, mayoreo: Double) {
+private fun TarjetaSemaforo(
+    producto: Producto,
+    mayoreo: Double,
+    ultimoLugar: String,
+    onGuardar: (precio: Double, lugar: String) -> Unit,
+) {
     var texto by rememberSaveable(producto.id) { mutableStateOf("") }
+    var lugar by rememberSaveable(producto.id) { mutableStateOf(ultimoLugar) }
+    var guardado by rememberSaveable(producto.id) { mutableStateOf<String?>(null) }
     val precio = texto.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 }
 
     Tarjeta {
@@ -184,6 +196,33 @@ private fun TarjetaSemaforo(producto: Producto, mayoreo: Double) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp),
             )
+
+            // ----- guardar en "Mis precios"
+            OutlinedTextField(
+                value = lugar,
+                onValueChange = { lugar = it.take(60) },
+                label = { Text("¿Dónde? (opcional)") },
+                placeholder = { Text("Tianguis, mercado, recaudería…") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+            )
+            val claveActual = "$texto|$lugar"
+            if (guardado == claveActual) {
+                Text(
+                    "✓ Guardado en Mis precios",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+            } else {
+                OutlinedButton(
+                    onClick = {
+                        onGuardar(precio, lugar)
+                        guardado = claveActual
+                    },
+                    modifier = Modifier.padding(top = 8.dp),
+                ) { Text("Guardar en Mis precios") }
+            }
         }
     }
 }

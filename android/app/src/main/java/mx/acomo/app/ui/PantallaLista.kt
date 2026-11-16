@@ -1,6 +1,11 @@
 package mx.acomo.app.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.res.painterResource
+import mx.acomo.app.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,6 +59,7 @@ fun PantallaLista(
     onElegirMercado: (String) -> Unit,
     onActualizar: () -> Unit,
     onAbrirProducto: (String) -> Unit,
+    onAbrirMisPrecios: () -> Unit,
 ) {
     var busqueda by rememberSaveable { mutableStateOf("") }
     val teclado = LocalSoftwareKeyboardController.current
@@ -73,6 +79,16 @@ fun PantallaLista(
                             )
                         }
                     }
+                },
+                navigationIcon = {
+                    Image(
+                        painter = painterResource(R.drawable.logo_koala),
+                        contentDescription = null,
+                        modifier = Modifier.padding(start = 12.dp, end = 4.dp).size(40.dp),
+                    )
+                },
+                actions = {
+                    TextButton(onClick = onAbrirMisPrecios) { Text("Mis precios") }
                 },
             )
         },

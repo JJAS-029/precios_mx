@@ -12,6 +12,8 @@ Fuente: [SNIIM](http://www.economia-sniim.gob.mx/) (Secretaría de Economía), p
 | `data/sniim_diario.csv` | Histórico diario crudo (todas las filas del SNIIM) |
 | `data/precios.json` | Agregado semanal que consume la app |
 | `.github/workflows/actualizar-precios.yml` | Actualización automática cada miércoles |
+| `android/` | App Android "¿A cómo?" (Kotlin + Compose) |
+| `diseno/` | Logo e íconos (`generar_iconos.py`) |
 | `plang.md` | Plan del proyecto |
 
 URL pública de los datos para la app:

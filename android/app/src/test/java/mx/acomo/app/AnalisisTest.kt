@@ -62,6 +62,21 @@ class AnalisisTest {
         assertEquals("$5.05", pesos(5.049))
     }
 
+    @Test fun csvDeMisPrecios() {
+        val r = mx.acomo.app.data.RegistroPrecio(
+            id = 1, fecha = "2026-11-16", productoId = "cebolla-bola-primera", producto = "Cebolla Bola",
+            precio = 40.0, mayoreo = 15.0, mercado = "150", lugar = "Tianguis \"Santa Cruz\"",
+            semaforo = Semaforo.ROJO,
+        )
+        assertEquals(40.0 / 15.0, r.factor, 0.0001)
+        val csv = mx.acomo.app.data.registrosCsv(listOf(r), mapOf("150" to "Central de Abasto de Toluca")).lines()
+        assertEquals("fecha,producto,precio_kg,lugar,mayoreo_kg,mercado_referencia,veces_mayoreo", csv[0])
+        assertEquals(
+            "2026-11-16,\"Cebolla Bola\",40.00,\"Tianguis 'Santa Cruz'\",15.00,\"Central de Abasto de Toluca\",2.67",
+            csv[1],
+        )
+    }
+
     /** El JSON real que genera el recolector debe poder leerse. */
     @Test fun leeJsonDelRecolector() {
         val archivo = File("../../data/precios.json")
