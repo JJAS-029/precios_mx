@@ -1,43 +1,44 @@
 package mx.acomo.app.ui
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import mx.acomo.app.data.Mercado
 import mx.acomo.app.data.porcentaje
 import mx.acomo.app.ui.theme.ColorBaja
 import mx.acomo.app.ui.theme.ColorSube
 import kotlin.math.abs
 
-/** "Central de Abasto de Toluca" -> "Toluca". */
-fun nombreCorto(mercado: String): String =
-    mercado.removePrefix("Central de Abasto de ").removePrefix("Central de Abasto ")
-
+/** Tarjeta con el mercado elegido; al tocarla se abre el selector de mercados. */
 @Composable
-fun SelectorMercado(
-    mercados: Map<String, String>,
-    seleccionado: String,
-    onElegir: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        mercados.forEach { (id, nombre) ->
-            FilterChip(
-                selected = id == seleccionado,
-                onClick = { onElegir(id) },
-                label = { Text(nombreCorto(nombre)) },
-            )
+fun BotonMercado(mercado: Mercado?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    OutlinedCard(onClick = onClick, modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("📍", modifier = Modifier.padding(end = 12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    mercado?.ciudad ?: "Elige tu mercado",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                if (mercado != null) {
+                    Text(
+                        "${mercado.nombre} · ${mercado.estado}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Text("Cambiar", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
         }
     }
 }

@@ -6,22 +6,43 @@ import kotlinx.serialization.json.Json
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.zip.GZIPInputStream
 
 /**
- * Descarga precios.json y guarda una copia local para que la app funcione
- * sin internet (en el mercado suele haber mala señal).
+ * Descarga los JSON generados por el recolector y guarda copia local
+ * para que la app funcione sin internet (en el mercado suele haber mala señal).
  */
 class Repositorio(
-    private val url: String,
-    private val archivoCache: File,
+    /** URL base que termina en "/data/". */
+    private val urlBase: String,
+    private val dirCache: File,
 ) {
     private val json = Json { ignoreUnknownKeys = true }
 
-    suspend fun leerCache(): DatosPrecios? = withContext(Dispatchers.IO) {
-        runCatching { json.decodeFromString<DatosPrecios>(archivoCache.readText()) }.getOrNull()
+    suspend fun indiceCache(): Indice? = leer("indice.json")
+    suspend fun mercadoCache(id: String): DatosMercado? = leer("mercados/$id.json")
+
+    suspend fun descargarIndice(): Indice = descargar("indice.json")
+    suspend fun descargarMercado(id: String): DatosMercado = descargar("mercados/$id.json")
+
+    private suspend inline fun <reified T> leer(ruta: String): T? = withContext(Dispatchers.IO) {
+        runCatching { json.decodeFromString<T>(archivo(ruta).readText()) }.getOrNull()
     }
 
-    suspend fun descargar(): DatosPrecios = withContext(Dispatchers.IO) {
+    private suspend inline fun <reified T> descargar(ruta: String): T = withContext(Dispatchers.IO) {
+        val texto = descargarTexto(urlBase + ruta)
+        val datos = json.decodeFromString<T>(texto) // valida antes de guardar
+        val destino = archivo(ruta)
+        destino.parentFile?.mkdirs()
+        val tmp = File(destino.path + ".tmp")
+        tmp.writeText(texto)
+        tmp.renameTo(destino)
+        datos
+    }
+
+    private fun archivo(ruta: String) = File(dirCache, ruta)
+
+    private fun descargarTexto(url: String): String {
         val conexion = URL(url).openConnection() as HttpURLConnection
         try {
             conexion.connectTimeout = 15_000
@@ -29,17 +50,8 @@ class Repositorio(
             conexion.setRequestProperty("Accept-Encoding", "gzip")
             val codigo = conexion.responseCode
             check(codigo == 200) { "El servidor respondió $codigo" }
-            val flujo = if (conexion.contentEncoding == "gzip") {
-                java.util.zip.GZIPInputStream(conexion.inputStream)
-            } else {
-                conexion.inputStream
-            }
-            val texto = flujo.bufferedReader().use { it.readText() }
-            val datos = json.decodeFromString<DatosPrecios>(texto) // valida antes de guardar
-            val tmp = File(archivoCache.path + ".tmp")
-            tmp.writeText(texto)
-            tmp.renameTo(archivoCache)
-            datos
+            val flujo = if (conexion.contentEncoding == "gzip") GZIPInputStream(conexion.inputStream) else conexion.inputStream
+            return flujo.bufferedReader().use { it.readText() }
         } finally {
             conexion.disconnect()
         }

@@ -43,9 +43,8 @@ fun Producto.coincide(busqueda: String): Boolean {
 
 // ------------------------------------------------------------------ series de precios
 
-/** Historial del producto en un mercado, de la semana más antigua a la más reciente. */
-fun Producto.serie(mercado: String): List<PrecioSemana> =
-    semanas.filter { it.mercado == mercado }.sortedBy { it.semana }
+/** Historial del producto, de la semana más antigua a la más reciente. */
+fun Producto.serie(): List<PrecioSemana> = semanas.sortedBy { it.semana }
 
 data class Resumen(
     val actual: PrecioSemana,
@@ -58,14 +57,39 @@ data class Resumen(
     val vsPromedio: Double get() = (actual.frec / promedio8 - 1) * 100
 }
 
-fun Producto.resumen(mercado: String): Resumen? {
-    val s = serie(mercado)
+fun Producto.resumen(): Resumen? {
+    val s = serie()
     val actual = s.lastOrNull() ?: return null
     val anterior = s.getOrNull(s.size - 2)
     val cambio = anterior?.let { (actual.frec / it.frec - 1) * 100 }
     val ult8 = s.takeLast(8)
     return Resumen(actual, cambio, ult8.sumOf { it.frec } / ult8.size)
 }
+
+// ------------------------------------------------------------------ mercados
+
+/** Distancia aproximada en km entre dos puntos (fórmula del haversine). */
+fun distanciaKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+    val r = 6371.0
+    val dLat = Math.toRadians(lat2 - lat1)
+    val dLon = Math.toRadians(lon2 - lon1)
+    val a = kotlin.math.sin(dLat / 2).let { it * it } +
+        kotlin.math.cos(Math.toRadians(lat1)) * kotlin.math.cos(Math.toRadians(lat2)) *
+        kotlin.math.sin(dLon / 2).let { it * it }
+    return 2 * r * kotlin.math.asin(kotlin.math.sqrt(a))
+}
+
+fun Mercado.distanciaA(otro: Mercado) = distanciaKm(lat, lon, otro.lat, otro.lon)
+
+fun Mercado.coincide(busqueda: String): Boolean {
+    val palabras = normalizar(busqueda).split(Regex("\\s+")).filter { it.isNotEmpty() }
+    val texto = normalizar("$ciudad $estado $nombre")
+    return palabras.all { it in texto }
+}
+
+/** Los [n] mercados más cercanos a éste (incluido él mismo), de más cerca a más lejos. */
+fun Indice.cercanos(mercado: Mercado, n: Int): List<Mercado> =
+    mercados.sortedBy { it.distanciaA(mercado) }.take(n)
 
 // ------------------------------------------------------------------ semáforo
 

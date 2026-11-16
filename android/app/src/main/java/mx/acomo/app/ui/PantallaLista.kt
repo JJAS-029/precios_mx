@@ -56,14 +56,14 @@ private const val UMBRAL_BARATO = -8.0
 @Composable
 fun PantallaLista(
     estado: EstadoUi,
-    onElegirMercado: (String) -> Unit,
+    onCambiarMercado: () -> Unit,
     onActualizar: () -> Unit,
     onAbrirProducto: (String) -> Unit,
     onAbrirMisPrecios: () -> Unit,
 ) {
     var busqueda by rememberSaveable { mutableStateOf("") }
     val teclado = LocalSoftwareKeyboardController.current
-    val datos = estado.datos
+    val datos = estado.datosActuales
 
     Scaffold(
         topBar = {
@@ -94,14 +94,17 @@ fun PantallaLista(
         },
     ) { padding ->
         if (datos == null) {
-            SinDatos(estado, onActualizar, Modifier.padding(padding))
+            Column(Modifier.padding(padding)) {
+                BotonMercado(estado.mercadoActual, onCambiarMercado, Modifier.padding(top = 8.dp))
+                SinDatos(estado, onActualizar, Modifier)
+            }
             return@Scaffold
         }
 
         // Productos con datos en el mercado elegido, con su resumen.
-        val conResumen: List<Pair<Producto, Resumen>> = remember(datos, estado.mercado) {
+        val conResumen: List<Pair<Producto, Resumen>> = remember(datos) {
             datos.productos
-                .mapNotNull { p -> p.resumen(estado.mercado)?.let { p to it } }
+                .mapNotNull { p -> p.resumen()?.let { p to it } }
                 .sortedBy { it.first.nombreVisible }
         }
         val filtrados = remember(conResumen, busqueda) {
@@ -120,6 +123,9 @@ fun PantallaLista(
         ) {
             LazyColumn(Modifier.fillMaxSize()) {
                 item {
+                    BotonMercado(estado.mercadoActual, onCambiarMercado, Modifier.padding(top = 8.dp))
+                }
+                item {
                     OutlinedTextField(
                         value = busqueda,
                         onValueChange = { busqueda = it },
@@ -129,9 +135,6 @@ fun PantallaLista(
                         keyboardActions = KeyboardActions(onSearch = { teclado?.hide() }),
                         modifier = Modifier.fillMaxWidth().padding(16.dp, 8.dp),
                     )
-                }
-                item {
-                    SelectorMercado(datos.mercados, estado.mercado, onElegirMercado)
                 }
                 estado.error?.let { msg ->
                     item { Aviso(msg) }
@@ -152,7 +155,7 @@ fun PantallaLista(
                 if (filtrados.isEmpty()) {
                     item {
                         Text(
-                            "No encontramos \"$busqueda\" en ${nombreCorto(datos.mercados[estado.mercado].orEmpty())}.",
+                            "No encontramos \"$busqueda\" en ${estado.mercadoActual?.ciudad.orEmpty()}.",
                             modifier = Modifier.padding(16.dp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

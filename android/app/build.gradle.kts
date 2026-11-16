@@ -15,11 +15,11 @@ android {
         versionCode = 1
         versionName = "0.1.0"
 
-        // URL del JSON generado por el recolector (GitHub Actions).
+        // Carpeta de datos generada por el recolector (GitHub Actions).
         buildConfigField(
             "String",
-            "URL_PRECIOS",
-            "\"https://raw.githubusercontent.com/JJAS-029/precios_mx/main/data/precios.json\"",
+            "URL_DATOS",
+            "\"https://raw.githubusercontent.com/JJAS-029/precios_mx/main/data/\"",
         )
     }
 

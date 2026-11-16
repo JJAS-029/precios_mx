@@ -3,86 +3,100 @@
 ## 1. Visión general
 App móvil (B2C) para combatir la asimetría de información en precios de frutas, verduras y básicos. El usuario consulta si el precio que le ofrecen en el mercado o tianguis es razonable, comparándolo con los precios oficiales de las Centrales de Abasto.
 
-* **Plataforma inicial:** Android nativo (Kotlin + Jetpack Compose).
+* **Plataforma inicial:** Android nativo (Kotlin + Jetpack Compose). Paquete `mx.acomo.app`.
 * **Fuente de datos:** SNIIM (Secretaría de Economía), precios de mayoreo de frutas y hortalizas.
-* **Cobertura inicial:** Estado de México (Toluca, Ecatepec) + Iztapalapa (CDMX) como referencia.
-* **Costo de infraestructura:** $0 (GitHub Actions + archivo JSON estático).
+* **Cobertura:** las 49 centrales de abasto que publica el SNIIM en todo el país (unas 45 con datos vigentes).
+* **Costo de infraestructura:** $0 (GitHub Actions + archivos JSON estáticos).
 
-## 2. Arquitectura (simplificada: sin servidor)
+## 2. Arquitectura (sin servidor)
 
 ```
-GitHub Actions (miércoles)  ──>  recolector/sniim.py  ──>  data/sniim_diario.csv  (histórico crudo)
-                                                       └─>  data/precios.json      (agregado semanal)
-App Android  ──descarga──>  raw.githubusercontent.com/JJAS-029/precios_mx/main/data/precios.json
-             └─ guarda copia local (funciona sin internet en el mercado)
+GitHub Actions (miércoles) ──> recolector/sniim.py ──> data/indice.json          (mercados, catálogo, último precio)
+                                                   └─> data/mercados/<id>.json   (52 semanas por mercado)
+App Android ──descarga──> raw.githubusercontent.com/JJAS-029/precios_mx/main/data/...
+            └─ guarda copia local (funciona sin internet en el mercado)
 ```
 
-Firebase queda para más adelante, cuando haya cuentas de usuario o reportes de precios hechos por usuarios.
+* La app descarga el índice (~100 KB) y **solo el archivo del mercado elegido** (~250 KB).
+* Firebase queda para más adelante, cuando haya cuentas de usuario o reportes de precios de usuarios.
 
-## 3. Hallazgos sobre el SNIIM (Fase 0, completada)
-* La consulta es una URL GET (no hace falta simular el formulario):
-  `ResultadosConsultaFechaFrutasYHortalizas.aspx?fechaInicio=dd/mm/aaaa&fechaFinal=dd/mm/aaaa&ProductoId=-1&OrigenId=-1&DestinoId=<id>&PreciosPorId=2&RegistrosPorPagina=10000`
-* `ProductoId=-1` trae **todos los productos** de un mercado en una sola petición.
-* `PreciosPorId=2` = **pesos por kilogramo (calculado)**: el SNIIM ya convierte cajas a kg. Esto resuelve el problema de unidades.
-* IDs de mercado: Toluca = 150, Ecatepec = 151, Iztapalapa = 100.
-* Datos **diarios** (lunes a viernes), con mínimo, máximo y frecuente, más origen y presentación.
-* Hay unos 100 productos con datos en estos 3 mercados.
+## 3. Hallazgos sobre el SNIIM
 
-## 4. Modelo de datos (`data/precios.json`)
+### Frutas y hortalizas (en uso)
+* Consulta por URL GET: `ResultadosConsultaFechaFrutasYHortalizas.aspx?fechaInicio=dd/mm/aaaa&fechaFinal=dd/mm/aaaa&ProductoId=-1&OrigenId=-1&DestinoId=<id>&PreciosPorId=2&RegistrosPorPagina=10000`
+* `ProductoId=-1` trae todos los productos de un mercado; `PreciosPorId=2` = pesos por kg (calculado).
+* Datos diarios (lunes a viernes): mínimo, máximo y frecuente. Catálogo de mercados con coordenadas aproximadas en `recolector/mercados.json`.
+
+### Pollo, huevo y cárnicos (investigado el 2026-11-16, pendiente de integrar)
+Base: `http://www.economia-sniim.gob.mx/SNIIM-Pecuarios-Nacionales/`
+
+| Producto | Consulta | Cobertura | Frecuencia | Ejemplo (nov-2026) | ¿Útil para la app? |
+|---|---|---|---|---|---|
+| **Huevo** blanco y rojo | `e_Hue.asp?prod=0&destino=<id>&sem=0&mes=MM&anio=AAAA` | ~44 centrales, incluye Toluca (150) y Ecatepec (151) | Semanal (miércoles) | Toluca: blanco $39.90/kg | ✅ Sí, mismos mercados |
+| **Pollo entero** y rosticero | `e_Ent.asp?prod=0&origen=0&destino=<id>&del=DD&al=DD&mes=MM&anio=AAAA` | CDMX (Becerra, San Juan, Nuevo San Juan, Rayón), Querétaro, Durango, Nayarit, Zacatecas, La Paz | Diario | CDMX: ~$65/kg | ✅ Sí, como referencia regional |
+| **Pollo en piezas** (pechuga, pierna/muslo, retazo) | `e_Pza.asp?destino=<id>&del=…` | Mismos centros que pollo entero | Diario | CDMX: pechuga ~$112, pierna/muslo ~$57 | ✅ Sí |
+| Res y cerdo: cortes | `e_Cor.asp?Var=Bov\|Por&…` | Empacadoras, sobre todo de Nuevo León; poca cobertura en el centro | Diario | Pulpa negra ~$157/kg (NL) | ⚠️ Limitado |
+| Res y cerdo: en canal / en pie | `SelCan.asp`, `SelPie.asp` | Rastros de todo el país | Diario | — | ❌ No es lo que compra el consumidor |
+
+Notas: las páginas pecuarias son ASP clásico (codificación latin-1), con fechas en campos separados (`del`, `al`, `mes`, `anio`) y paginación con `RegPag`. Para mercados sin datos de pollo se puede mostrar el de la central más cercana que sí tenga.
+
+## 4. Modelo de datos
+
+`data/indice.json`
 ```json
 {
-  "version": 1,
-  "generado": "2026-11-16T18:00:00+00:00",
-  "unidad": "MXN/kg",
-  "mercados": { "150": "Central de Abasto de Toluca", "151": "...", "100": "..." },
-  "semanas": ["2025-W47", "...", "2026-W46"],
-  "productos": [
-    {
-      "id": "tomate-saladette-primera",
-      "nombre": "Tomate Saladette", "calidad": "Primera", "categoria": "Hortalizas",
-      "semanas": [ { "semana": "2026-W46", "mercado": "151", "min": 32.5, "max": 41.0, "frec": 37.5, "dias": 5 } ]
-    }
-  ]
+  "version": 2, "generado": "...", "ultimaSemana": "2026-W46",
+  "mercados": [ { "id": "150", "nombre": "Central de Abasto", "ciudad": "Toluca", "estado": "Estado de México",
+                  "lat": 19.27, "lon": -99.58, "ultimaSemana": "2026-W46", "productos": 59 } ],
+  "productos": [ { "id": "tomate-saladette-primera", "nombre": "Tomate Saladette", "calidad": "Primera", "categoria": "Hortalizas" } ],
+  "ultimos": { "tomate-saladette-primera": { "150": 30.73, "151": 37.5 } }
 }
 ```
-Agregado semanal por producto y mercado: `min` = mínimo de la semana, `max` = máximo, `frec` = mediana del precio frecuente diario. Se guardan las últimas 52 semanas.
+
+`data/mercados/<id>.json`
+```json
+{ "version": 2, "mercado": "150", "semanas": ["2025-W47", "..."],
+  "productos": [ { "id": "...", "nombre": "...", "calidad": "...", "categoria": "...",
+                   "semanas": [ { "semana": "2026-W46", "min": 25.0, "max": 39.58, "frec": 30.73, "dias": 5 } ] } ] }
+```
+`frec` = mediana semanal del precio frecuente diario. Se guardan 52 semanas.
 
 ## 5. Fases
 
-### Fase 0: Investigación del SNIIM ✅
-### Fase 1: Recolector en Python ✅
-`recolector/sniim.py`: descarga, guarda el CSV diario y genera el JSON. Histórico cargado desde nov-2025.
+### ✅ Fase 0–2: Investigación, recolector y automatización
+GitHub Actions consulta el SNIIM cada miércoles (verificado que no bloquea las IPs de GitHub).
 
-### Fase 2: Automatización ✅ (verificada: GitHub sí puede consultar el SNIIM)
-`.github/workflows/actualizar-precios.yml`: cada miércoles descarga los últimos 14 días y hace commit.
-* Riesgo: el sitio del gobierno podría bloquear IPs fuera de México (los servidores de GitHub están en EE.UU.). Si pasa, alternativas: ejecutarlo desde una PC local con el Programador de tareas, o desde una Raspberry Pi o un VPS en México.
+### ✅ Fase 3: App básica
+Lista con buscador, "Barato esta semana", detalle con semáforo, gráfica de 12 semanas y comparación entre mercados. Funciona sin internet.
 
-### Fase 3: App Android básica ✅ (falta probar en un teléfono)
-Carpeta `android/`: Kotlin, Jetpack Compose, minSdk 26, compileSdk 37.
-* Descarga `precios.json` (HttpURLConnection + kotlinx.serialization) y lo guarda en el teléfono; funciona sin internet.
-* Lista con buscador (sin acentos, "jitomate" encuentra Tomate Saladette/Bola), selector de mercado y sección "Barato esta semana".
-* Detalle: precio de la semana, cambio semanal, promedio de 8 semanas, semáforo, gráfica de 12 semanas (Canvas) y comparación entre mercados.
-* Pruebas unitarias en `app/src/test` (incluyen leer el JSON real).
+### ✅ Fase 3.5: Identidad y "Mis precios"
+Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste y compartirlo como CSV.
 
-### Fase 3.5: Identidad y "Mis precios" ✅
-* Logo del koala (`diseno/logo_original.jpg`); íconos generados con `diseno/generar_iconos.py`. Ícono para Google Play: `diseno/play_store_512.png`.
-* La app recuerda el último mercado elegido.
-* "Mis precios": guardar lo que pagaste (precio, lugar, fecha) contra el mayoreo de la semana; se puede compartir como CSV para calibrar el semáforo.
+### ✅ Fase 3.6: Cobertura nacional, selector de zona y modo oscuro
+* Los 49 mercados del SNIIM.
+* Selector de mercado con buscador (ciudad o estado) y botón **"Usar mi ubicación"** (permiso de ubicación aproximada, se pide solo al tocar el botón y no sale del teléfono).
+* Comparación contra los mercados más cercanos al tuyo.
+* Modo oscuro según la configuración del teléfono.
 
-### Fase 4: MVP (parcialmente adelantado en la Fase 3)
-* **Buscador** con tolerancia a acentos y sinónimos ("jitomate" → Tomate Saladette/Bola).
-* **Detalle de producto:** precio de la semana, tendencia contra la semana anterior y gráfica de 12 semanas (Vico).
-* **Semáforo:** el usuario escribe el precio que le ofrecen por kg y lo compara contra el mayoreo × factor de menudeo.
-  * Factor inicial: alrededor de ×1.3–1.6 según la categoría (por calibrar). Presentarlo como **"precio de referencia"**, no como "precio justo".
-* **"Barato esta semana":** productos con precio más bajo que su promedio de 8 semanas.
+### ⏳ Fase 4: Antes de publicar en Google Play
+* Firma de la app (keystore) y compilación release (`.aab`).
+* Política de privacidad (la app no recopila datos personales; ubicación solo local).
+* Ficha de la tienda: descripción, capturas, ícono 512 px (`diseno/play_store_512.png`), clasificación de contenido, formulario de seguridad de datos.
+* Prueba interna o cerrada con familiares y amigos (Google pide 12 testers × 14 días para cuentas personales nuevas).
 
-### Fase 5: Crecimiento
-* Más mercados y estados (solo hay que agregar IDs en `MERCADOS`).
-* Reportes de usuarios ("pagué $X en el tianguis de Y") → precio de menudeo propio (aquí entra Firebase).
-* Lista del súper con costo estimado y notificaciones de bajadas de precio.
-* Investigar los datos abiertos de PROFECO (Quién es Quién en los Precios) para calibrar el factor de menudeo.
+### Fase 5: Funciones que suman (ideas del 2026-11-16)
+Ordenadas de más fácil a más trabajo:
+
+1. **Equivalencias / sustitutos.** "El jitomate está caro esta semana; el tomate verde está 30 % abajo de su promedio". Tabla manual de sustitutos (jitomate ↔ tomate verde, limón con semilla ↔ sin semilla, papa ↔ camote, chile poblano ↔ chilaca, calabacita italiana ↔ criolla, naranja ↔ mandarina para jugo…) y se sugiere el que esté más barato contra su promedio. Solo usa datos que ya tenemos.
+2. **Calculadora / carrito de presupuesto.** El usuario arma su lista ("2 kg jitomate, 1 kg cebolla, 3 aguacates…") y ve el costo estimado al menudeo (mayoreo × factor), con total y semáforo por producto. Para piezas (aguacate, piña, lechuga) hace falta un peso promedio por pieza. Guardar listas frecuentes ("mandado de la semana").
+3. **Productos de temporada.** Con el historial de 52 semanas se calcula en qué meses cada producto suele estar más barato. Sección "De temporada este mes" y aviso del tipo "Empieza la temporada de mandarina".
+4. **Avisos de precios bajos.** El usuario marca productos favoritos y recibe una notificación cuando bajan cierto % o están abajo de su promedio. Se puede hacer local: WorkManager revisa los datos nuevos cada miércoles y lanza una notificación, sin servidor. Requiere permiso de notificaciones (Android 13+).
+5. **Huevo y pollo** (ver sección 3). Huevo primero, porque cubre los mismos mercados.
+6. **Reportes de usuarios** ("pagué $X en el tianguis de Y") para tener precio de menudeo real; aquí entraría Firebase.
+7. **Mapa de mercados.** Opcional; el buscador con ubicación ya resuelve la selección. Un mapa requiere el SDK de Google Maps (API key) u OpenStreetMap (osmdroid).
+8. Datos abiertos de PROFECO (Quién es Quién en los Precios) para calibrar el factor de menudeo.
 
 ## 6. Pendientes y decisiones abiertas
-* Nombres amigables: el SNIIM dice "Tomate Saladette"; en el centro del país se dice "jitomate". Hace falta una tabla de sinónimos y nombres para mostrar.
-* Calibrar el factor de menudeo por categoría.
-* Ícono, nombre comercial y cuenta de Google Play (pago único de 25 USD).
+* Calibrar el factor de menudeo (hoy ×1.5); usar los CSV de "Mis precios".
+* Ampliar la tabla de nombres comunes y sinónimos por región (jitomate/tomate, elote, ejote…).
+* Las coordenadas de `mercados.json` son aproximadas (a nivel ciudad); bastan para ordenar por cercanía.

@@ -31,7 +31,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import mx.acomo.app.data.DatosPrecios
+import mx.acomo.app.data.Indice
+import mx.acomo.app.data.Mercado
+import mx.acomo.app.data.cercanos
 import mx.acomo.app.data.Producto
 import mx.acomo.app.data.Semaforo
 import mx.acomo.app.data.etiquetaSemana
@@ -44,22 +46,31 @@ import mx.acomo.app.data.serie
 import mx.acomo.app.ui.theme.ColoresSemaforo
 
 private const val SEMANAS_GRAFICA = 12
+private const val MERCADOS_COMPARACION = 4
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaDetalle(
-    datos: DatosPrecios,
+    indice: Indice,
     producto: Producto,
-    mercado: String,
+    mercado: Mercado,
     ultimoLugar: String,
-    onElegirMercado: (String) -> Unit,
     onGuardarPrecio: (precio: Double, mayoreo: Double, lugar: String) -> Unit,
     onVolver: () -> Unit,
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(producto.nombreVisible) },
+                title = {
+                    Column {
+                        Text(producto.nombreVisible)
+                        Text(
+                            "${mercado.nombre}, ${mercado.ciudad}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onVolver) {
                         Text("←", style = MaterialTheme.typography.titleLarge)
@@ -72,12 +83,10 @@ fun PantallaDetalle(
             Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            SelectorMercado(datos.mercados, mercado, onElegirMercado)
-
-            val r = producto.resumen(mercado)
+            val r = producto.resumen()
             if (r == null) {
                 Text(
-                    "No hay datos de este producto en ${nombreCorto(datos.mercados[mercado].orEmpty())}.",
+                    "No hay datos de este producto en ${mercado.ciudad}.",
                     modifier = Modifier.padding(16.dp),
                 )
                 return@Column
@@ -118,24 +127,26 @@ fun PantallaDetalle(
             // ----- gráfica
             Tarjeta {
                 Text("Últimas $SEMANAS_GRAFICA semanas", style = MaterialTheme.typography.titleSmall)
-                GraficaPrecios(producto.serie(mercado).takeLast(SEMANAS_GRAFICA), Modifier.padding(top = 8.dp))
+                GraficaPrecios(producto.serie().takeLast(SEMANAS_GRAFICA), Modifier.padding(top = 8.dp))
             }
 
             // ----- comparación entre mercados
             Tarjeta {
-                Text("En otros mercados esta semana", style = MaterialTheme.typography.titleSmall)
-                val precios = datos.mercados.mapNotNull { (id, nombre) ->
-                    producto.resumen(id)?.let { Triple(id, nombre, it.actual.frec) }
-                }
-                val masBarato = precios.minOfOrNull { it.third }
-                precios.forEach { (id, nombre, frec) ->
+                Text("En mercados cercanos", style = MaterialTheme.typography.titleSmall)
+                val ultimos = indice.ultimos[producto.id].orEmpty()
+                val precios = indice.cercanos(mercado, MERCADOS_COMPARACION + 4)
+                    .mapNotNull { m -> ultimos[m.id]?.let { m to it } }
+                    .take(MERCADOS_COMPARACION)
+                val masBarato = precios.minOfOrNull { it.second }
+                precios.forEach { (m, frec) ->
+                    val actual = m.id == mercado.id
                     Row(Modifier.fillMaxWidth().padding(top = 6.dp)) {
                         Text(
-                            nombreCorto(nombre) + if (frec == masBarato && precios.size > 1) "  · más barato" else "",
-                            fontWeight = if (id == mercado) FontWeight.Bold else FontWeight.Normal,
+                            m.ciudad + if (frec == masBarato && precios.size > 1) "  · más barato" else "",
+                            fontWeight = if (actual) FontWeight.Bold else FontWeight.Normal,
                         )
                         Spacer(Modifier.weight(1f))
-                        Text(pesos(frec), fontWeight = if (id == mercado) FontWeight.Bold else FontWeight.Normal)
+                        Text(pesos(frec), fontWeight = if (actual) FontWeight.Bold else FontWeight.Normal)
                     }
                 }
             }

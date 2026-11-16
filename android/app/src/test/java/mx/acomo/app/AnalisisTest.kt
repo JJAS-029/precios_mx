@@ -1,7 +1,11 @@
 package mx.acomo.app
 
 import kotlinx.serialization.json.Json
-import mx.acomo.app.data.DatosPrecios
+import mx.acomo.app.data.DatosMercado
+import mx.acomo.app.data.Indice
+import mx.acomo.app.data.Mercado
+import mx.acomo.app.data.cercanos
+import mx.acomo.app.data.distanciaA
 import mx.acomo.app.data.PrecioSemana
 import mx.acomo.app.data.Producto
 import mx.acomo.app.data.Semaforo
@@ -23,9 +27,8 @@ class AnalisisTest {
         id = "tomate-saladette-primera", nombre = "Tomate Saladette", calidad = "Primera",
         categoria = "Hortalizas",
         semanas = listOf(
-            PrecioSemana("2026-W45", "150", 25.0, 30.0, 30.0, 5),
-            PrecioSemana("2026-W46", "150", 25.0, 40.0, 33.0, 5),
-            PrecioSemana("2026-W46", "151", 32.0, 41.0, 37.5, 5),
+            PrecioSemana("2026-W46", 25.0, 40.0, 33.0, 5),
+            PrecioSemana("2026-W45", 25.0, 30.0, 30.0, 5),
         ),
     )
 
@@ -39,12 +42,12 @@ class AnalisisTest {
     }
 
     @Test fun resumenPorMercado() {
-        val r = jitomate.resumen("150")!!
+        val r = jitomate.resumen()!!
         assertEquals(33.0, r.actual.frec, 0.001)
         assertEquals(10.0, r.cambioSemanal!!, 0.001)
         assertEquals(31.5, r.promedio8, 0.001)
-        assertEquals(null, jitomate.resumen("151")!!.cambioSemanal)
-        assertEquals(null, jitomate.resumen("999"))
+        assertEquals(null, jitomate.copy(semanas = jitomate.semanas.take(1)).resumen()!!.cambioSemanal)
+        assertEquals(null, jitomate.copy(semanas = emptyList()).resumen())
     }
 
     @Test fun semaforo() {
@@ -77,12 +80,28 @@ class AnalisisTest {
         )
     }
 
-    /** El JSON real que genera el recolector debe poder leerse. */
+    @Test fun mercadosPorDistanciaYBusqueda() {
+        val toluca = Mercado("150", "Central de Abasto", "Toluca", "Estado de México", 19.27, -99.58)
+        val ecatepec = Mercado("151", "Central de Abasto", "Ecatepec", "Estado de México", 19.60, -99.05)
+        val merida = Mercado("310", "Central de Abasto", "Mérida", "Yucatán", 20.97, -89.62)
+        val km = toluca.distanciaA(ecatepec)
+        assertTrue("Toluca-Ecatepec ~66 km, fue $km", km in 55.0..75.0)
+        val indice = Indice(1, "", mercados = listOf(merida, ecatepec, toluca))
+        assertEquals(listOf("150", "151"), indice.cercanos(toluca, 2).map { it.id })
+        assertTrue(merida.coincide("merida"))
+        assertTrue(toluca.coincide("estado de mexico"))
+        assertFalse(toluca.coincide("yucatan"))
+    }
+
+    /** Los JSON reales que genera el recolector deben poder leerse. */
     @Test fun leeJsonDelRecolector() {
-        val archivo = File("../../data/precios.json")
-        if (!archivo.exists()) return
-        val datos = Json { ignoreUnknownKeys = true }.decodeFromString<DatosPrecios>(archivo.readText())
-        assertTrue(datos.productos.size > 50)
-        assertNotNull(datos.productos.find { it.id == "tomate-saladette-primera" }?.resumen("150"))
+        val json = Json { ignoreUnknownKeys = true }
+        val archivoIndice = File("../../data/indice.json")
+        val archivoToluca = File("../../data/mercados/150.json")
+        if (!archivoIndice.exists() || !archivoToluca.exists()) return
+        val indice = json.decodeFromString<Indice>(archivoIndice.readText())
+        assertTrue(indice.mercados.any { it.id == "150" })
+        val toluca = json.decodeFromString<DatosMercado>(archivoToluca.readText())
+        assertNotNull(toluca.productos.find { it.id == "tomate-saladette-primera" }?.resumen())
     }
 }
