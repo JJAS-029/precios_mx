@@ -53,16 +53,18 @@ Agregado semanal por producto y mercado: `min` = mínimo de la semana, `max` = m
 ### Fase 1: Recolector en Python ✅
 `recolector/sniim.py`: descarga, guarda el CSV diario y genera el JSON. Histórico cargado desde nov-2025.
 
-### Fase 2: Automatización ✅ (falta verificar la primera ejecución en GitHub)
+### Fase 2: Automatización ✅ (verificada: GitHub sí puede consultar el SNIIM)
 `.github/workflows/actualizar-precios.yml`: cada miércoles descarga los últimos 14 días y hace commit.
 * Riesgo: el sitio del gobierno podría bloquear IPs fuera de México (los servidores de GitHub están en EE.UU.). Si pasa, alternativas: ejecutarlo desde una PC local con el Programador de tareas, o desde una Raspberry Pi o un VPS en México.
 
-### Fase 3: App Android básica ⏳ (siguiente)
-* Proyecto Android Studio: Kotlin, Jetpack Compose, minSdk 24.
-* Descargar `precios.json` (Retrofit o Ktor + kotlinx.serialization) y guardarlo localmente.
-* Pantalla de lista: producto + precio frecuente de esta semana en el mercado elegido.
+### Fase 3: App Android básica ✅ (falta probar en un teléfono)
+Carpeta `android/`: Kotlin, Jetpack Compose, minSdk 26, compileSdk 37.
+* Descarga `precios.json` (HttpURLConnection + kotlinx.serialization) y lo guarda en el teléfono; funciona sin internet.
+* Lista con buscador (sin acentos, "jitomate" encuentra Tomate Saladette/Bola), selector de mercado y sección "Barato esta semana".
+* Detalle: precio de la semana, cambio semanal, promedio de 8 semanas, semáforo, gráfica de 12 semanas (Canvas) y comparación entre mercados.
+* Pruebas unitarias en `app/src/test` (incluyen leer el JSON real).
 
-### Fase 4: MVP
+### Fase 4: MVP (parcialmente adelantado en la Fase 3)
 * **Buscador** con tolerancia a acentos y sinónimos ("jitomate" → Tomate Saladette/Bola).
 * **Detalle de producto:** precio de la semana, tendencia contra la semana anterior y gráfica de 12 semanas (Vico).
 * **Semáforo:** el usuario escribe el precio que le ofrecen por kg y lo compara contra el mayoreo × factor de menudeo.
