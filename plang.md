@@ -117,7 +117,7 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
 * **Consentimiento de anuncios:** si se distribuye solo en México no se exige el formulario europeo (GDPR); si se abre a otros países, integrar UMP (`user-messaging-platform`).
 * **Plus con Google Play Billing:** crear el producto "plus" (pago único) en Play Console e integrar `billing-ktx`; al abrir la app, confirmar la compra y restaurarla en otro teléfono. Quitar el interruptor de prueba de la versión release (ya está oculto con `BuildConfig.DEBUG`).
 * ✔ Política de privacidad redactada en `docs/privacidad.html` (falta el correo de contacto y activar GitHub Pages). La app no recopila datos personales y la ubicación solo se usa en el teléfono, **pero AdMob sí usa el identificador de publicidad**; debe decirlo la política y el formulario de seguridad de datos.
-* ✔ Textos de la ficha y respuestas de seguridad de datos en `diseno/PUBLICAR.md`. Faltan: capturas, imagen destacada 1024×500; ya está el, ícono 512 px (`diseno/play_store_512.png`), clasificación de contenido, formulario de seguridad de datos.
+* ✔ Textos de la ficha y respuestas de seguridad de datos en `diseno/PUBLICAR.md`; ícono 512 px en `diseno/play_store_512.png`. Faltan capturas, imagen destacada 1024×500 y llenar los formularios en Play Console.
 
 ### Fase 5: Funciones que suman (ideas del 2026-11-16)
 Ordenadas de más fácil a más trabajo:
