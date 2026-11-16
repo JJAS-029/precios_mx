@@ -12,6 +12,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import mx.acomo.app.data.fechaDatos
 import mx.acomo.app.ui.PantallaDetalle
 import mx.acomo.app.ui.PantallaLista
 import mx.acomo.app.ui.PantallaMercados
@@ -64,6 +65,7 @@ private fun App(vm: PreciosViewModel = viewModel()) {
                 producto = producto,
                 mercado = mercado,
                 ultimoLugar = estado.ultimoLugar,
+                fechaDatos = estado.datosActuales?.fechaDatos.orEmpty(),
                 onGuardarPrecio = { precio, mayoreo, lugar -> vm.guardarPrecio(producto, precio, mayoreo, lugar) },
                 onVolver = { productoId = null },
             )

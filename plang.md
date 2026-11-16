@@ -78,11 +78,19 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
 * Comparación contra los mercados más cercanos al tuyo.
 * Modo oscuro según la configuración del teléfono.
 
+### ✅ Fase 3.7: Material 3 Expressive y fechas de actualización
+* `material3 1.5.0-rc01` con `MaterialExpressiveTheme`, `MotionScheme.expressive()`, formas (`MaterialShapes`), barra superior flexible y `LoadingIndicator`.
+* Color dinámico (Material You) en Android 12+; en versiones anteriores, paleta tonal verde de la marca.
+* Emoji por producto dentro de formas expresivas; "Barato esta semana" en tarjetas horizontales.
+* Fechas: "Precios de mayoreo al vie 13 nov" en el encabezado, "Último dato del SNIIM … · revisado el …" bajo el mercado, fecha por mercado en el selector y aviso ⚠ si un mercado lleva más de 10 días sin publicar.
+* El recolector guarda `ultimaFecha` (día exacto del último dato) por mercado.
+
 ### ⏳ Fase 4: Antes de publicar en Google Play
+* ✔ Cuenta de desarrollador de Google Play: ya existe.
+* 📝 **Testers (pendiente, se ve más adelante):** las cuentas personales nuevas deben hacer una prueba cerrada con al menos 12 testers durante 14 días antes de poder publicar en producción. Ir juntando correos de familiares y amigos con Android.
 * Firma de la app (keystore) y compilación release (`.aab`).
 * Política de privacidad (la app no recopila datos personales; ubicación solo local).
 * Ficha de la tienda: descripción, capturas, ícono 512 px (`diseno/play_store_512.png`), clasificación de contenido, formulario de seguridad de datos.
-* Prueba interna o cerrada con familiares y amigos (Google pide 12 testers × 14 días para cuentas personales nuevas).
 
 ### Fase 5: Funciones que suman (ideas del 2026-11-16)
 Ordenadas de más fácil a más trabajo:

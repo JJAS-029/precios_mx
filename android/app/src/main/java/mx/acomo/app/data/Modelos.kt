@@ -26,6 +26,8 @@ data class Mercado(
     val lat: Double,
     val lon: Double,
     val ultimaSemana: String = "",
+    /** Fecha (AAAA-MM-DD) del dato más reciente que publicó el SNIIM para este mercado. */
+    val ultimaFecha: String = "",
     val productos: Int = 0,
 )
 
@@ -43,6 +45,8 @@ data class DatosMercado(
     val version: Int,
     val mercado: String,
     val generado: String,
+    /** Fecha (AAAA-MM-DD) del dato más reciente que publicó el SNIIM. */
+    val ultimaFecha: String = "",
     val unidad: String = "MXN/kg",
     /** Semanas ISO ordenadas, p. ej. "2026-W46". */
     val semanas: List<String>,

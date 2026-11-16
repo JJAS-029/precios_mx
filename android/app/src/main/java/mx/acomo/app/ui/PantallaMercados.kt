@@ -12,7 +12,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.draw.clip
+import mx.acomo.app.data.DIAS_DESACTUALIZADO
+import mx.acomo.app.data.diasDesde
+import mx.acomo.app.data.fechaCorta
+import mx.acomo.app.data.fechaDatos
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -45,7 +58,7 @@ import mx.acomo.app.data.coincide
 import mx.acomo.app.data.distanciaKm
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PantallaMercados(
     indice: Indice?,
@@ -112,7 +125,7 @@ fun PantallaMercados(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 if (error == null) {
-                    CircularProgressIndicator()
+                    LoadingIndicator(Modifier.size(64.dp))
                 } else {
                     Text(error)
                     FilledTonalButton(onClick = onReintentar, modifier = Modifier.padding(top = 12.dp)) {
@@ -139,8 +152,9 @@ fun PantallaMercados(
                 OutlinedTextField(
                     value = busqueda,
                     onValueChange = { busqueda = it },
-                    placeholder = { Text("Buscar ciudad o estado") },
+                    placeholder = { Text("🔍  Buscar ciudad o estado") },
                     singleLine = true,
+                    shape = CircleShape,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { teclado?.hide() }),
                     modifier = Modifier.fillMaxWidth().padding(16.dp, 8.dp),
@@ -148,6 +162,7 @@ fun PantallaMercados(
             }
             item {
                 FilledTonalButton(
+                    shapes = ButtonDefaults.shapes(),
                     onClick = {
                         if (tienePermisoUbicacion(contexto)) ubicar()
                         else pedirPermiso.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -180,7 +195,31 @@ fun PantallaMercados(
                     headlineContent = {
                         Text(m.ciudad, fontWeight = if (elegido) FontWeight.Bold else FontWeight.Normal)
                     },
-                    supportingContent = { Text("${m.nombre} · ${m.estado}") },
+                    supportingContent = {
+                        val fecha = m.fechaDatos
+                        val viejo = (diasDesde(fecha) ?: 0) > DIAS_DESACTUALIZADO
+                        Column {
+                            Text("${m.nombre} · ${m.estado}")
+                            Text(
+                                if (viejo) "⚠ Sin datos desde el ${fechaCorta(fecha)}" else "Datos al ${fechaCorta(fecha)}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (viejo) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
+                    leadingContent = {
+                        Box(
+                            Modifier.size(40.dp).clip(MaterialShapes.Cookie7Sided.toShape())
+                                .background(if (elegido) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                m.estado.take(1),
+                                fontWeight = FontWeight.Bold,
+                                color = if (elegido) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
                     trailingContent = {
                         when {
                             elegido -> Text("✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)

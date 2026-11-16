@@ -10,7 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import mx.acomo.app.data.fechaCorta
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
@@ -48,13 +52,15 @@ import mx.acomo.app.ui.theme.ColoresSemaforo
 private const val SEMANAS_GRAFICA = 12
 private const val MERCADOS_COMPARACION = 4
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PantallaDetalle(
     indice: Indice,
     producto: Producto,
     mercado: Mercado,
     ultimoLugar: String,
+    /** Fecha (AAAA-MM-DD) del dato más reciente del mercado. */
+    fechaDatos: String,
     onGuardarPrecio: (precio: Double, mayoreo: Double, lugar: String) -> Unit,
     onVolver: () -> Unit,
 ) {
@@ -93,7 +99,17 @@ fun PantallaDetalle(
             }
 
             // ----- precio de la semana
-            Tarjeta {
+            Tarjeta(destacada = true) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    InsigniaProducto(producto, tamano = 56.dp, fondo = MaterialTheme.colorScheme.surfaceContainerLowest)
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        Text(producto.categoria, style = MaterialTheme.typography.labelLarge)
+                        val fecha = fechaCorta(fechaDatos)
+                        if (fecha.isNotBlank()) Text("Dato más reciente: $fecha", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
                 Text(
                     "Mayoreo, semana del ${etiquetaSemana(r.actual.semana)}",
                     style = MaterialTheme.typography.labelLarge,
@@ -102,8 +118,8 @@ fun PantallaDetalle(
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         pesos(r.actual.frec),
-                        style = MaterialTheme.typography.displaySmall,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Black,
                     )
                     Text(" /kg", modifier = Modifier.padding(bottom = 6.dp))
                     Spacer(Modifier.weight(1f))
@@ -228,6 +244,7 @@ private fun TarjetaSemaforo(
                 )
             } else {
                 OutlinedButton(
+                    shapes = ButtonDefaults.shapes(),
                     onClick = {
                         onGuardar(precio, lugar)
                         guardado = claveActual
@@ -240,8 +257,15 @@ private fun TarjetaSemaforo(
 }
 
 @Composable
-private fun Tarjeta(content: @Composable () -> Unit) {
-    Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-        Column(Modifier.padding(16.dp)) { content() }
+private fun Tarjeta(destacada: Boolean = false, content: @Composable () -> Unit) {
+    Card(
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = if (destacada) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
+            contentColor = if (destacada) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+        ),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+    ) {
+        Column(Modifier.padding(20.dp)) { content() }
     }
 }

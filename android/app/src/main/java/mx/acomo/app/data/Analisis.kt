@@ -27,6 +27,33 @@ private val SINONIMOS = mapOf(
 val Producto.nombreVisible: String
     get() = NOMBRES_COMUNES[nombre] ?: nombre
 
+/** Primera palabra del nombre -> emoji. Se buscan en orden; gana la primera que coincide. */
+private val EMOJIS = listOf(
+    "tomate" to "🍅", "aguacate" to "🥑", "cebolla" to "🧅", "papa" to "🥔",
+    "limon" to "🍋", "lima" to "🍋", "platano" to "🍌", "manzana" to "🍎", "naranja" to "🍊",
+    "mandarina" to "🍊", "toronja" to "🍊", "mango" to "🥭", "pina" to "🍍", "uva" to "🍇",
+    "fresa" to "🍓", "sandia" to "🍉", "melon" to "🍈", "pera" to "🍐", "durazno" to "🍑",
+    "chabacano" to "🍑", "nectarina" to "🍑", "ciruela" to "🍑", "cereza" to "🍒", "coco" to "🥥",
+    "kiwi" to "🥝", "chile" to "🌶️", "elote" to "🌽", "zanahoria" to "🥕", "ajo" to "🧄",
+    "brocoli" to "🥦", "coliflor" to "🥦", "lechuga" to "🥬", "col " to "🥬", "espinaca" to "🥬",
+    "acelga" to "🥬", "apio" to "🥬", "pepino" to "🥒", "calabac" to "🥒", "chayote" to "🥒",
+    "nopal" to "🌵", "cacahuate" to "🥜", "nuez" to "🌰", "camote" to "🍠", "berenjena" to "🍆",
+    "jamaica" to "🌺", "champinon" to "🍄", "ejote" to "🫛", "haba" to "🫛", "chicharo" to "🫛",
+    "papaya" to "🍈", "guayaba" to "🍐", "granada" to "🍎", "jicama" to "🥔", "betabel" to "🥕",
+    "cilantro" to "🌿", "perejil" to "🌿", "epazote" to "🌿", "yerbabuena" to "🌿", "oregano" to "🌿",
+)
+
+val Producto.emoji: String
+    get() {
+        val n = normalizar(nombre) + " "
+        return EMOJIS.firstOrNull { n.startsWith(it.first) }?.second
+            ?: when (normalizar(categoria)) {
+                "frutas", "frutas de temporada" -> "🍏"
+                "chiles secos" -> "🌶️"
+                else -> "🥬"
+            }
+    }
+
 fun normalizar(texto: String): String =
     Normalizer.normalize(texto, Normalizer.Form.NFD)
         .replace(Regex("\\p{M}+"), "")
@@ -154,6 +181,30 @@ fun etiquetaCorta(semanaIso: String): String {
     val lunes = lunesDeSemana(semanaIso)
     return "${lunes.dayOfMonth} ${MESES[lunes.monthValue - 1]}"
 }
+
+private val DIAS = listOf("lun", "mar", "mié", "jue", "vie", "sáb", "dom")
+
+/** "jue 13 nov" (agrega el año si no es el actual). Vacío si la fecha no es válida. */
+fun fechaCorta(iso: String, hoy: LocalDate = LocalDate.now()): String {
+    val f = runCatching { LocalDate.parse(iso.take(10)) }.getOrNull() ?: return ""
+    val base = "${DIAS[f.dayOfWeek.value - 1]} ${f.dayOfMonth} ${MESES[f.monthValue - 1]}"
+    return if (f.year == hoy.year) base else "$base ${f.year}"
+}
+
+/** Días entre una fecha AAAA-MM-DD (o fecha-hora ISO) y hoy; null si no es válida. */
+fun diasDesde(iso: String, hoy: LocalDate = LocalDate.now()): Long? =
+    runCatching { java.time.temporal.ChronoUnit.DAYS.between(LocalDate.parse(iso.take(10)), hoy) }.getOrNull()
+
+/** Viernes de una semana ISO, como AAAA-MM-DD (respaldo cuando no hay fecha exacta). */
+fun viernesDeSemana(semanaIso: String): String =
+    runCatching { lunesDeSemana(semanaIso).plusDays(4).toString() }.getOrDefault("")
+
+/** Fecha del último dato de un mercado: la exacta si existe, si no el viernes de su última semana. */
+val Mercado.fechaDatos: String get() = ultimaFecha.ifBlank { viernesDeSemana(ultimaSemana) }
+val DatosMercado.fechaDatos: String get() = ultimaFecha.ifBlank { semanas.lastOrNull()?.let(::viernesDeSemana).orEmpty() }
+
+/** Un mercado se considera desactualizado si su último dato tiene más de este número de días. */
+const val DIAS_DESACTUALIZADO = 10
 
 fun pesos(valor: Double): String {
     val centavos = (valor * 100).roundToInt()
