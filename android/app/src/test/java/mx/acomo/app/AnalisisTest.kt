@@ -14,6 +14,12 @@ import mx.acomo.app.data.etiquetaSemana
 import mx.acomo.app.data.evaluarPrecio
 import mx.acomo.app.data.pesos
 import mx.acomo.app.data.resumen
+import mx.acomo.app.data.ArticuloMandado
+import mx.acomo.app.data.cantidad
+import mx.acomo.app.data.mandadoTexto
+import mx.acomo.app.data.masKg
+import mx.acomo.app.data.menosKg
+import mx.acomo.app.data.presupuesto
 import mx.acomo.app.data.alternativas
 import mx.acomo.app.data.sugerenciasCambio
 import org.junit.Assert.assertEquals
@@ -85,6 +91,29 @@ class AnalisisTest {
         val limon5 = prod("Limón c/semilla # 5", 18.0, 15.0)
         val sinSemilla = prod("Limón s/semilla", 22.0, 20.0)
         assertEquals(listOf("Limón s/semilla"), alternativas(limon4, listOf(limon4, limon5, sinSemilla)).map { it.producto.nombre })
+    }
+
+    @Test fun presupuestoDelMandado() {
+        val aguacate = prod("Aguacate Hass", 40.0, 40.0, "Frutas")
+        val guajillo = prod("Chile Guajillo", 100.0, 100.0, "Chiles secos")
+        val lista = listOf(
+            ArticuloMandado(jitomate.id, "Jitomate saladette", 2.0),
+            ArticuloMandado(aguacate.id, "Aguacate Hass", 0.5),
+            ArticuloMandado(guajillo.id, "Chile guajillo", 0.25),
+            ArticuloMandado("no-existe", "Mamey", 1.0),
+        )
+        val p = presupuesto(lista, listOf(jitomate, aguacate, guajillo))
+        // 2 × 33 + 0.5 × 40 + 0.25 × 100 = 111 de mayoreo
+        assertEquals(111.0, p.totalMayoreo, 0.001)
+        // (66 + 20) × 1.5 + 25 × 1.4 = 164
+        assertEquals(164.0, p.totalEstimado, 0.001)
+        assertEquals(1, p.sinPrecio)
+        assertEquals("250 g", cantidad(0.25))
+        assertEquals("1 kg", cantidad(1.0))
+        assertEquals("1.5 kg", cantidad(1.5))
+        assertEquals(2.5, masKg(2.0), 0.0)
+        assertEquals(1.75, menosKg(2.0), 0.0)
+        assertTrue(mandadoTexto(p, "Toluca").contains("Total aproximado: $164"))
     }
 
     @Test fun resumenPorMercado() {

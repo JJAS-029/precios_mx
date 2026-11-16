@@ -1,7 +1,21 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+}
+
+// IDs de PRUEBA oficiales de Google: se usan en desarrollo y como respaldo.
+val admobAppIdPrueba = "ca-app-pub-3940256099942544~3347511713"
+val admobBannerPrueba = "ca-app-pub-3940256099942544/9214589741"
+// IDs reales de AdMob para la versión publicada (en gradle.properties; no son secretos).
+val admobAppId: String = providers.gradleProperty("admob.appId").orNull ?: admobAppIdPrueba
+val admobBanner: String = providers.gradleProperty("admob.banner").orNull ?: admobBannerPrueba
+
+// Firma para Google Play: android/keystore.properties (NO se sube a git). Ver diseno/PUBLICAR.md.
+val firma = Properties().apply {
+    rootProject.file("keystore.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
 }
 
 android {
@@ -21,15 +35,29 @@ android {
             "URL_DATOS",
             "\"https://raw.githubusercontent.com/JJAS-029/precios_mx/main/data/\"",
         )
+    }
 
-        // AdMob. Por ahora son los IDs de PRUEBA oficiales de Google (muestran anuncios de ejemplo).
-        // Antes de publicar: reemplazar por los IDs reales de la cuenta de AdMob.
-        manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
-        buildConfigField("String", "ADMOB_BANNER", "\"ca-app-pub-3940256099942544/9214589741\"")
+    signingConfigs {
+        if (firma.containsKey("storeFile")) {
+            create("play") {
+                storeFile = rootProject.file(firma.getProperty("storeFile"))
+                storePassword = firma.getProperty("storePassword")
+                keyAlias = firma.getProperty("keyAlias")
+                keyPassword = firma.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
+        debug {
+            // En desarrollo siempre anuncios de prueba (tocar anuncios reales propios viola las reglas de AdMob).
+            manifestPlaceholders["admobAppId"] = admobAppIdPrueba
+            buildConfigField("String", "ADMOB_BANNER", "\"$admobBannerPrueba\"")
+        }
         release {
+            manifestPlaceholders["admobAppId"] = admobAppId
+            buildConfigField("String", "ADMOB_BANNER", "\"$admobBanner\"")
+            signingConfig = signingConfigs.findByName("play")
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -60,6 +88,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.play.services.ads)
+    implementation(libs.androidx.work.runtime)
     debugImplementation(libs.androidx.ui.tooling)
     testImplementation(libs.junit)
 }

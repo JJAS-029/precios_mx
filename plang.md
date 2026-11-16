@@ -97,6 +97,12 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
 * En la lista: sección "Está caro, mejor cambia" con hasta 3 cambios (p. ej. Toluca: col +35 % → lechuga; Iztapalapa: limón sin semilla +19 % → limón con semilla −22 %).
 * Grupos automáticos por variedad (misma primera palabra; sin juntar tamaños como "# 4" y "# 5") y grupos manuales por uso en `Analisis.kt` (salsa, rajas, chile picoso, chile seco, pimiento, jugo, limón, ensalada, brócoli/coliflor, papa/camote, guisado, durazno/nectarina).
 
+### ✅ Fase 3.10: Mi mandado (calculadora de presupuesto)
+* Botón 🛒 (con contador) en la barra superior; en el detalle, "🛒 Agregar" y selector − / + (250 g en 250 g hasta 2 kg, luego medio kilo).
+* Total estimado en mercado o tianguis (mayoreo × factor), total de mayoreo, aviso de productos sin precio en el mercado elegido y "Compartir lista" (texto para WhatsApp). Los estimados se muestran en pesos enteros.
+* La lista se guarda en el teléfono y sirve al cambiar de mercado (el id del producto es el mismo).
+* Pendiente: piezas (aguacate, piña, lechuga) con peso promedio por pieza; varias listas guardadas.
+
 ### 💰 Modelo de monetización
 * **Gratis con anuncios:** un solo banner en la pantalla principal. Nada de anuncios de pantalla completa ni en la pantalla de detalle (es la que se usa frente al puesto).
 * **Plus, pago único** (sugerido $29–49 MXN, por definir): quita anuncios y desbloquea temas. Más adelante podría incluir funciones extra (avisos de precio, varias listas de mandado), pero las funciones de precios básicas siempre gratis.
@@ -105,18 +111,19 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
 ### ⏳ Fase 4: Antes de publicar en Google Play
 * ✔ Cuenta de desarrollador de Google Play: ya existe.
 * 📝 **Testers (pendiente, se ve más adelante):** las cuentas personales nuevas deben hacer una prueba cerrada con al menos 12 testers durante 14 días antes de poder publicar en producción. Ir juntando correos de familiares y amigos con Android.
-* Firma de la app (keystore) y compilación release (`.aab`).
-* **AdMob:** crear la cuenta y la app en AdMob, poner el ID de app y el del bloque de banner reales en `app/build.gradle.kts` (hoy son los de prueba), y agregar `app-ads.txt` (puede ir en GitHub Pages).
+* ✔ Firma de la app (llave de subida local, fuera de git) y compilación release (`.aab`) verificada en el emulador. Guía paso a paso: `diseno/PUBLICAR.md`.
+* ✔ R8: AdMob trae WorkManager 2.7, que fallaba en release; se fuerza WorkManager 2.12.
+* **AdMob:** registrar "¿A cómo?" como app nueva en la cuenta existente y poner sus IDs en `android/gradle.properties` (la versión debug siempre usa anuncios de prueba). `app-ads.txt` en la raíz del sitio web de la ficha.
 * **Consentimiento de anuncios:** si se distribuye solo en México no se exige el formulario europeo (GDPR); si se abre a otros países, integrar UMP (`user-messaging-platform`).
 * **Plus con Google Play Billing:** crear el producto "plus" (pago único) en Play Console e integrar `billing-ktx`; al abrir la app, confirmar la compra y restaurarla en otro teléfono. Quitar el interruptor de prueba de la versión release (ya está oculto con `BuildConfig.DEBUG`).
-* Política de privacidad: la app no recopila datos personales y la ubicación solo se usa en el teléfono, **pero AdMob sí usa el identificador de publicidad**; debe decirlo la política y el formulario de seguridad de datos.
-* Ficha de la tienda: descripción, capturas, ícono 512 px (`diseno/play_store_512.png`), clasificación de contenido, formulario de seguridad de datos.
+* ✔ Política de privacidad redactada en `docs/privacidad.html` (falta el correo de contacto y activar GitHub Pages). La app no recopila datos personales y la ubicación solo se usa en el teléfono, **pero AdMob sí usa el identificador de publicidad**; debe decirlo la política y el formulario de seguridad de datos.
+* ✔ Textos de la ficha y respuestas de seguridad de datos en `diseno/PUBLICAR.md`. Faltan: capturas, imagen destacada 1024×500; ya está el, ícono 512 px (`diseno/play_store_512.png`), clasificación de contenido, formulario de seguridad de datos.
 
 ### Fase 5: Funciones que suman (ideas del 2026-11-16)
 Ordenadas de más fácil a más trabajo:
 
 1. ~~Equivalencias / sustitutos~~ ✅ (Fase 3.9). Pendiente: ampliar la tabla con lo que digan los usuarios.
-2. **Calculadora / carrito de presupuesto.** El usuario arma su lista ("2 kg jitomate, 1 kg cebolla, 3 aguacates…") y ve el costo estimado al menudeo (mayoreo × factor), con total y semáforo por producto. Para piezas (aguacate, piña, lechuga) hace falta un peso promedio por pieza. Guardar listas frecuentes ("mandado de la semana").
+2. ~~**Calculadora / carrito de presupuesto.**~~ ✅ (Fase 3.10, falta lo de piezas). El usuario arma su lista ("2 kg jitomate, 1 kg cebolla, 3 aguacates…") y ve el costo estimado al menudeo (mayoreo × factor), con total y semáforo por producto. Para piezas (aguacate, piña, lechuga) hace falta un peso promedio por pieza. Guardar listas frecuentes ("mandado de la semana").
 3. **Productos de temporada.** Con el historial de 52 semanas se calcula en qué meses cada producto suele estar más barato. Sección "De temporada este mes" y aviso del tipo "Empieza la temporada de mandarina".
 4. **Avisos de precios bajos.** El usuario marca productos favoritos y recibe una notificación cuando bajan cierto % o están abajo de su promedio. Se puede hacer local: WorkManager revisa los datos nuevos cada miércoles y lanza una notificación, sin servidor. Requiere permiso de notificaciones (Android 13+).
 5. **Huevo y pollo** (ver sección 3). Huevo primero, porque cubre los mismos mercados.

@@ -77,6 +77,7 @@ fun PantallaLista(
     onAbrirProducto: (String) -> Unit,
     onAbrirMisPrecios: () -> Unit,
     onAbrirAjustes: () -> Unit,
+    onAbrirMandado: () -> Unit,
 ) {
     var busqueda by rememberSaveable { mutableStateOf("") }
     val teclado = LocalSoftwareKeyboardController.current
@@ -101,6 +102,15 @@ fun PantallaLista(
                 },
                 actions = {
                     TextButton(onClick = onAbrirMisPrecios) { Text("Mis precios", fontWeight = FontWeight.Bold) }
+                    IconButton(onClick = onAbrirMandado) {
+                        androidx.compose.material3.BadgedBox(
+                            badge = {
+                                if (estado.mandado.isNotEmpty()) {
+                                    androidx.compose.material3.Badge { Text("${estado.mandado.size}") }
+                                }
+                            },
+                        ) { Text("🛒", style = MaterialTheme.typography.titleLarge) }
+                    }
                     IconButton(onClick = onAbrirAjustes) { Text("⚙", style = MaterialTheme.typography.titleLarge) }
                 },
                 scrollBehavior = scroll,
@@ -235,7 +245,7 @@ private fun TarjetaBarato(p: Producto, r: Resumen, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onTertiaryContainer,
             )
             Text(
-                "▼ ${porcentaje(r.vsPromedio)} vs. promedio",
+                "${porcentaje(r.vsPromedio)} vs. promedio",
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onTertiaryContainer,

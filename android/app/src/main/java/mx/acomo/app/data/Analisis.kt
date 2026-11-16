@@ -296,6 +296,9 @@ fun pesos(valor: Double): String {
     return "$" + (centavos / 100) + "." + (centavos % 100).toString().padStart(2, '0')
 }
 
+/** "$66": para estimados, donde los centavos darían una precisión que no existe. */
+fun pesosRedondo(valor: Double): String = "$" + valor.roundToInt()
+
 fun porcentaje(valor: Double): String {
     val r = valor.roundToInt()
     return if (r > 0) "+$r%" else "$r%"

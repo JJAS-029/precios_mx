@@ -21,6 +21,7 @@ import mx.acomo.app.data.alternativas
 import mx.acomo.app.data.fechaDatos
 import mx.acomo.app.ui.PantallaAjustes
 import mx.acomo.app.ui.PantallaDetalle
+import mx.acomo.app.ui.PantallaMandado
 import mx.acomo.app.ui.PantallaLista
 import mx.acomo.app.ui.PantallaMercados
 import mx.acomo.app.ui.PantallaMisPrecios
@@ -56,6 +57,7 @@ private fun App(vm: PreciosViewModel) {
     var misPrecios by rememberSaveable { mutableStateOf(false) }
     var elegirMercado by rememberSaveable { mutableStateOf(false) }
     var ajustes by rememberSaveable { mutableStateOf(false) }
+    var mandado by rememberSaveable { mutableStateOf(false) }
 
     val producto = productoId?.let { id -> estado.datosActuales?.productos?.find { it.id == id } }
     val indice = estado.indice
@@ -91,7 +93,22 @@ private fun App(vm: PreciosViewModel) {
                     alternativas(producto, estado.datosActuales?.productos.orEmpty())
                 },
                 onAbrirProducto = { productoId = it },
+                kgEnMandado = estado.mandado.find { it.productoId == producto.id }?.kg,
+                onPonerEnMandado = { kg -> vm.ponerEnMandado(producto, kg) },
+                onAbrirMandado = { productoId = null; mandado = true },
                 onVolver = { productoId = null },
+            )
+        }
+        mandado -> {
+            BackHandler { mandado = false }
+            PantallaMandado(
+                articulos = estado.mandado,
+                productos = estado.datosActuales?.productos.orEmpty(),
+                mercado = mercado?.ciudad.orEmpty(),
+                onCambiarKg = vm::cambiarKg,
+                onAbrirProducto = { productoId = it },
+                onVaciar = vm::vaciarMandado,
+                onVolver = { mandado = false },
             )
         }
         ajustes -> {
@@ -122,6 +139,7 @@ private fun App(vm: PreciosViewModel) {
             onAbrirProducto = { productoId = it },
             onAbrirMisPrecios = { misPrecios = true },
             onAbrirAjustes = { ajustes = true },
+            onAbrirMandado = { mandado = true },
         )
     }
 }

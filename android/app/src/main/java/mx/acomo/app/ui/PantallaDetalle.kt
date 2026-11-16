@@ -66,6 +66,10 @@ fun PantallaDetalle(
     /** Sustitutos en el mismo mercado (ver [mx.acomo.app.data.alternativas]). */
     alternativas: List<Alternativa>,
     onAbrirProducto: (String) -> Unit,
+    /** Kilos de este producto en el mandado (null si no está). */
+    kgEnMandado: Double?,
+    onPonerEnMandado: (kg: Double) -> Unit,
+    onAbrirMandado: () -> Unit,
     onVolver: () -> Unit,
 ) {
     Scaffold(
@@ -143,6 +147,9 @@ fun PantallaDetalle(
             TarjetaSemaforo(producto, r.actual.frec, ultimoLugar) { precio, lugar ->
                 onGuardarPrecio(precio, r.actual.frec, lugar)
             }
+
+            // ----- mandado
+            TarjetaMandado(producto, kgEnMandado, onPonerEnMandado, onAbrirMandado)
 
             // ----- equivalencias
             TarjetaAlternativas(producto, r, alternativas, onAbrirProducto)
@@ -274,5 +281,44 @@ private fun Tarjeta(destacada: Boolean = false, content: @Composable () -> Unit)
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
     ) {
         Column(Modifier.padding(20.dp)) { content() }
+    }
+}
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun TarjetaMandado(
+    producto: Producto,
+    kg: Double?,
+    onPoner: (Double) -> Unit,
+    onAbrirMandado: () -> Unit,
+) {
+    Tarjeta {
+        if (kg == null) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("¿Lo vas a comprar?", style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        "Agrégalo y calcula cuánto vas a gastar.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                androidx.compose.material3.FilledTonalButton(
+                    onClick = { onPoner(1.0) },
+                    shapes = ButtonDefaults.shapes(),
+                ) { Text("🛒 Agregar") }
+            }
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("En tu mandado", style = MaterialTheme.typography.titleSmall)
+                    androidx.compose.material3.TextButton(
+                        onClick = onAbrirMandado,
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                    ) { Text("Ver mandado →") }
+                }
+                SelectorKg(kg) { onPoner(if (it < 0.25) 0.0 else it) }
+            }
+        }
     }
 }

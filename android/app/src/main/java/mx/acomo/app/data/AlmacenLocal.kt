@@ -63,6 +63,13 @@ class AlmacenLocal(
         get() = prefs.getBoolean(CLAVE_PLUS, false)
         set(v) = prefs.edit().putBoolean(CLAVE_PLUS, v).apply()
 
+    /** Lista del mandado (pocos elementos, cabe en las preferencias). */
+    var mandado: List<ArticuloMandado>
+        get() = runCatching {
+            json.decodeFromString<List<ArticuloMandado>>(prefs.getString(CLAVE_MANDADO, null) ?: "[]")
+        }.getOrDefault(emptyList())
+        set(v) = prefs.edit().putString(CLAVE_MANDADO, json.encodeToString(v)).apply()
+
     suspend fun registros(): List<RegistroPrecio> = withContext(Dispatchers.IO) {
         runCatching { json.decodeFromString<List<RegistroPrecio>>(archivo.readText()) }.getOrDefault(emptyList())
     }
@@ -79,6 +86,7 @@ class AlmacenLocal(
         const val CLAVE_ESTILO = "estilo_color"
         const val CLAVE_MODO = "modo_tema"
         const val CLAVE_PLUS = "plus"
+        const val CLAVE_MANDADO = "mandado"
     }
 }
 

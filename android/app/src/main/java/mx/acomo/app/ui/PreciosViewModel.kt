@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mx.acomo.app.BuildConfig
 import mx.acomo.app.data.AlmacenLocal
+import mx.acomo.app.data.ArticuloMandado
 import mx.acomo.app.data.DatosMercado
 import mx.acomo.app.data.Indice
 import mx.acomo.app.data.Mercado
@@ -39,6 +40,7 @@ data class EstadoUi(
     val estilo: EstiloColor = EstiloColor.VERDE,
     val modo: ModoTema = ModoTema.SISTEMA,
     val plus: Boolean = false,
+    val mandado: List<ArticuloMandado> = emptyList(),
 ) {
     val mercadoActual: Mercado? get() = indice?.mercados?.find { it.id == mercado }
 
@@ -61,6 +63,7 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
             estilo = EstiloColor.desde(almacen.estiloColor),
             modo = ModoTema.desde(almacen.modoTema),
             plus = almacen.plus,
+            mandado = almacen.mandado,
         ),
     )
     val estado: StateFlow<EstadoUi> = _estado.asStateFlow()
@@ -148,6 +151,30 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
     fun cambiarPlus(activo: Boolean) {
         almacen.plus = activo
         _estado.update { it.copy(plus = activo) }
+    }
+
+    // ----- mandado
+
+    /** Agrega el producto o cambia su cantidad; con kg <= 0 lo quita. */
+    fun ponerEnMandado(producto: Producto, kg: Double) =
+        cambiarMandado { lista ->
+            val sin = lista.filterNot { it.productoId == producto.id }
+            if (kg <= 0.0) sin
+            else if (sin.size == lista.size) lista + ArticuloMandado(producto.id, producto.nombreVisible, kg)
+            else lista.map { if (it.productoId == producto.id) it.copy(kg = kg) else it }
+        }
+
+    fun cambiarKg(productoId: String, kg: Double) = cambiarMandado { lista ->
+        if (kg <= 0.0) lista.filterNot { it.productoId == productoId }
+        else lista.map { if (it.productoId == productoId) it.copy(kg = kg) else it }
+    }
+
+    fun vaciarMandado() = cambiarMandado { emptyList() }
+
+    private fun cambiarMandado(cambio: (List<ArticuloMandado>) -> List<ArticuloMandado>) {
+        val nueva = cambio(_estado.value.mandado)
+        almacen.mandado = nueva
+        _estado.update { it.copy(mandado = nueva) }
     }
 
     fun borrarRegistro(id: Long) {
