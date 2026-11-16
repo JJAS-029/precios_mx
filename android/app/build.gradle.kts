@@ -21,6 +21,11 @@ android {
             "URL_DATOS",
             "\"https://raw.githubusercontent.com/JJAS-029/precios_mx/main/data/\"",
         )
+
+        // AdMob. Por ahora son los IDs de PRUEBA oficiales de Google (muestran anuncios de ejemplo).
+        // Antes de publicar: reemplazar por los IDs reales de la cuenta de AdMob.
+        manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
+        buildConfigField("String", "ADMOB_BANNER", "\"ca-app-pub-3940256099942544/9214589741\"")
     }
 
     buildTypes {
@@ -54,6 +59,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.play.services.ads)
     debugImplementation(libs.androidx.ui.tooling)
     testImplementation(libs.junit)
 }

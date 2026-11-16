@@ -85,11 +85,26 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
 * Fechas: "Precios de mayoreo al vie 13 nov" en el encabezado, "Último dato del SNIIM … · revisado el …" bajo el mercado, fecha por mercado en el selector y aviso ⚠ si un mercado lleva más de 10 días sin publicar.
 * El recolector guarda `ultimaFecha` (día exacto del último dato) por mercado.
 
+### ✅ Fase 3.8: Temas, Ajustes y monetización (base)
+* Pantalla **Ajustes** (⚙ en la barra superior).
+* **Gratis:** tema verde del koala y modo Sistema / Claro / Oscuro.
+* **¿A cómo? Plus:** sin anuncios, 4 temas extra (Jitomate, Mandarina, Jamaica, Maíz azul; paletas generadas con `diseno/paletas.py`) y "Colores de tu fondo de pantalla" (Material You, Android 12+).
+* **Anuncios:** banner adaptable de AdMob al pie de la lista de productos, solo sin Plus. Por ahora con los **IDs de prueba de Google**.
+* Plus se guarda en el teléfono; en la versión de desarrollo hay un interruptor "Activar Plus de prueba". La compra real llega en la Fase 4.
+
+### 💰 Modelo de monetización
+* **Gratis con anuncios:** un solo banner en la pantalla principal. Nada de anuncios de pantalla completa ni en la pantalla de detalle (es la que se usa frente al puesto).
+* **Plus, pago único** (sugerido $29–49 MXN, por definir): quita anuncios y desbloquea temas. Más adelante podría incluir funciones extra (avisos de precio, varias listas de mandado), pero las funciones de precios básicas siempre gratis.
+* AdMob paga poco por usuario en México; el ingreso real depende de volumen. Plus es el complemento.
+
 ### ⏳ Fase 4: Antes de publicar en Google Play
 * ✔ Cuenta de desarrollador de Google Play: ya existe.
 * 📝 **Testers (pendiente, se ve más adelante):** las cuentas personales nuevas deben hacer una prueba cerrada con al menos 12 testers durante 14 días antes de poder publicar en producción. Ir juntando correos de familiares y amigos con Android.
 * Firma de la app (keystore) y compilación release (`.aab`).
-* Política de privacidad (la app no recopila datos personales; ubicación solo local).
+* **AdMob:** crear la cuenta y la app en AdMob, poner el ID de app y el del bloque de banner reales en `app/build.gradle.kts` (hoy son los de prueba), y agregar `app-ads.txt` (puede ir en GitHub Pages).
+* **Consentimiento de anuncios:** si se distribuye solo en México no se exige el formulario europeo (GDPR); si se abre a otros países, integrar UMP (`user-messaging-platform`).
+* **Plus con Google Play Billing:** crear el producto "plus" (pago único) en Play Console e integrar `billing-ktx`; al abrir la app, confirmar la compra y restaurarla en otro teléfono. Quitar el interruptor de prueba de la versión release (ya está oculto con `BuildConfig.DEBUG`).
+* Política de privacidad: la app no recopila datos personales y la ubicación solo se usa en el teléfono, **pero AdMob sí usa el identificador de publicidad**; debe decirlo la política y el formulario de seguridad de datos.
 * Ficha de la tienda: descripción, capturas, ícono 512 px (`diseno/play_store_512.png`), clasificación de contenido, formulario de seguridad de datos.
 
 ### Fase 5: Funciones que suman (ideas del 2026-11-16)

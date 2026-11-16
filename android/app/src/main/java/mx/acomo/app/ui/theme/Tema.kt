@@ -75,23 +75,56 @@ object ColoresSemaforo {
 val ColorSube = Color(0xFFD32F2F)
 val ColorBaja = Color(0xFF2E7D32)
 
-/**
- * Tema Material 3 Expressive. En Android 12+ usa los colores del fondo de pantalla
- * (Material You); en versiones anteriores, la paleta verde de la marca.
- */
+/** Paletas de color. Solo [VERDE] es gratuita; las demás son parte de ¿A cómo? Plus. */
+enum class EstiloColor(val nombre: String, val muestra: Color, val plus: Boolean) {
+    VERDE("Koala (verde)", Color(0xFF4C662B), plus = false),
+    JITOMATE("Jitomate", Color(0xFFC62828), plus = true),
+    MANDARINA("Mandarina", Color(0xFFEF6C00), plus = true),
+    JAMAICA("Jamaica", Color(0xFF8E2C6E), plus = true),
+    MAIZ_AZUL("Maíz azul", Color(0xFF3949AB), plus = true),
+    /** Material You: toma los colores del fondo de pantalla (Android 12+). */
+    DINAMICO("Colores de tu fondo de pantalla", Color(0xFF6750A4), plus = true);
+
+    companion object {
+        val dinamicoDisponible: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+        fun desde(nombre: String?): EstiloColor = entries.find { it.name == nombre } ?: VERDE
+    }
+}
+
+/** Claro u oscuro. Gratis para todos (es también una cuestión de accesibilidad). */
+enum class ModoTema(val nombre: String) {
+    SISTEMA("Sistema"), CLARO("Claro"), OSCURO("Oscuro");
+
+    companion object {
+        fun desde(nombre: String?): ModoTema = entries.find { it.name == nombre } ?: SISTEMA
+    }
+}
+
+/** Tema Material 3 Expressive. Si el estilo pide Plus y no hay Plus, se usa el verde de la marca. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TemaAcomo(
-    colorDinamico: Boolean = true,
+    estilo: EstiloColor = EstiloColor.VERDE,
+    modo: ModoTema = ModoTema.SISTEMA,
+    plus: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val oscuro = isSystemInDarkTheme()
+    val oscuro = when (modo) {
+        ModoTema.SISTEMA -> isSystemInDarkTheme()
+        ModoTema.CLARO -> false
+        ModoTema.OSCURO -> true
+    }
     val contexto = LocalContext.current
-    val colores = when {
-        colorDinamico && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-            if (oscuro) dynamicDarkColorScheme(contexto) else dynamicLightColorScheme(contexto)
-        oscuro -> Oscuro
-        else -> Claro
+    val efectivo = if (estilo.plus && !plus) EstiloColor.VERDE else estilo
+    val colores = when (efectivo) {
+        EstiloColor.DINAMICO ->
+            if (!EstiloColor.dinamicoDisponible) { if (oscuro) Oscuro else Claro }
+            else if (oscuro) dynamicDarkColorScheme(contexto) else dynamicLightColorScheme(contexto)
+        EstiloColor.JITOMATE -> if (oscuro) JitomateOscuro else JitomateClaro
+        EstiloColor.MANDARINA -> if (oscuro) MandarinaOscuro else MandarinaClaro
+        EstiloColor.JAMAICA -> if (oscuro) JamaicaOscuro else JamaicaClaro
+        EstiloColor.MAIZ_AZUL -> if (oscuro) MaizAzulOscuro else MaizAzulClaro
+        EstiloColor.VERDE -> if (oscuro) Oscuro else Claro
     }
     MaterialExpressiveTheme(
         colorScheme = colores,

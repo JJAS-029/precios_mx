@@ -25,6 +25,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LoadingIndicator
@@ -62,7 +63,6 @@ import mx.acomo.app.data.nombreVisible
 import mx.acomo.app.data.pesos
 import mx.acomo.app.data.porcentaje
 import mx.acomo.app.data.resumen
-import mx.acomo.app.ui.theme.ColorBaja
 
 /** Un producto "está barato" si su precio está al menos 8 % abajo de su promedio de 8 semanas. */
 private const val UMBRAL_BARATO = -8.0
@@ -75,6 +75,7 @@ fun PantallaLista(
     onActualizar: () -> Unit,
     onAbrirProducto: (String) -> Unit,
     onAbrirMisPrecios: () -> Unit,
+    onAbrirAjustes: () -> Unit,
 ) {
     var busqueda by rememberSaveable { mutableStateOf("") }
     val teclado = LocalSoftwareKeyboardController.current
@@ -99,10 +100,12 @@ fun PantallaLista(
                 },
                 actions = {
                     TextButton(onClick = onAbrirMisPrecios) { Text("Mis precios", fontWeight = FontWeight.Bold) }
+                    IconButton(onClick = onAbrirAjustes) { Text("⚙", style = MaterialTheme.typography.titleLarge) }
                 },
                 scrollBehavior = scroll,
             )
         },
+        bottomBar = { BannerAnuncio(estado.plus) },
     ) { padding ->
         if (datos == null) {
             Column(Modifier.padding(padding)) {
@@ -224,10 +227,10 @@ private fun TarjetaBarato(p: Producto, r: Resumen, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onTertiaryContainer,
             )
             Text(
-                "${porcentaje(r.vsPromedio)} vs. promedio",
+                "▼ ${porcentaje(r.vsPromedio)} vs. promedio",
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = ColorBaja,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
             )
         }
     }

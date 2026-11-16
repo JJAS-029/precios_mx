@@ -21,6 +21,8 @@ import mx.acomo.app.data.Repositorio
 import mx.acomo.app.data.evaluarPrecio
 import mx.acomo.app.data.hoy
 import mx.acomo.app.data.nombreVisible
+import mx.acomo.app.ui.theme.EstiloColor
+import mx.acomo.app.ui.theme.ModoTema
 import java.io.File
 
 data class EstadoUi(
@@ -34,6 +36,9 @@ data class EstadoUi(
     val mercado: String? = null,
     val registros: List<RegistroPrecio> = emptyList(),
     val ultimoLugar: String = "",
+    val estilo: EstiloColor = EstiloColor.VERDE,
+    val modo: ModoTema = ModoTema.SISTEMA,
+    val plus: Boolean = false,
 ) {
     val mercadoActual: Mercado? get() = indice?.mercados?.find { it.id == mercado }
 
@@ -50,7 +55,13 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
     )
 
     private val _estado = MutableStateFlow(
-        EstadoUi(mercado = almacen.mercado, ultimoLugar = almacen.ultimoLugar),
+        EstadoUi(
+            mercado = almacen.mercado,
+            ultimoLugar = almacen.ultimoLugar,
+            estilo = EstiloColor.desde(almacen.estiloColor),
+            modo = ModoTema.desde(almacen.modoTema),
+            plus = almacen.plus,
+        ),
     )
     val estado: StateFlow<EstadoUi> = _estado.asStateFlow()
 
@@ -121,6 +132,22 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
         val nuevos = estado.registros + registro
         _estado.update { it.copy(registros = nuevos, ultimoLugar = lugar.trim()) }
         viewModelScope.launch { almacen.guardar(nuevos) }
+    }
+
+    fun elegirEstilo(estilo: EstiloColor) {
+        almacen.estiloColor = estilo.name
+        _estado.update { it.copy(estilo = estilo) }
+    }
+
+    fun elegirModo(modo: ModoTema) {
+        almacen.modoTema = modo.name
+        _estado.update { it.copy(modo = modo) }
+    }
+
+    /** Solo para pruebas mientras no existe el producto en Google Play. */
+    fun cambiarPlus(activo: Boolean) {
+        almacen.plus = activo
+        _estado.update { it.copy(plus = activo) }
     }
 
     fun borrarRegistro(id: Long) {

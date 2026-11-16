@@ -45,6 +45,24 @@ class AlmacenLocal(
         get() = prefs.getString(CLAVE_LUGAR, "").orEmpty()
         set(v) = prefs.edit().putString(CLAVE_LUGAR, v).apply()
 
+    /** Nombre del EstiloColor elegido. */
+    var estiloColor: String?
+        get() = prefs.getString(CLAVE_ESTILO, null)
+        set(v) = prefs.edit().putString(CLAVE_ESTILO, v).apply()
+
+    /** Nombre del ModoTema elegido. */
+    var modoTema: String?
+        get() = prefs.getString(CLAVE_MODO, null)
+        set(v) = prefs.edit().putString(CLAVE_MODO, v).apply()
+
+    /**
+     * ¿A cómo? Plus. Por ahora solo se activa en compilaciones de prueba; cuando exista
+     * el producto en Google Play, este valor lo confirmará Play Billing al abrir la app.
+     */
+    var plus: Boolean
+        get() = prefs.getBoolean(CLAVE_PLUS, false)
+        set(v) = prefs.edit().putBoolean(CLAVE_PLUS, v).apply()
+
     suspend fun registros(): List<RegistroPrecio> = withContext(Dispatchers.IO) {
         runCatching { json.decodeFromString<List<RegistroPrecio>>(archivo.readText()) }.getOrDefault(emptyList())
     }
@@ -58,6 +76,9 @@ class AlmacenLocal(
     private companion object {
         const val CLAVE_MERCADO = "mercado"
         const val CLAVE_LUGAR = "ultimo_lugar"
+        const val CLAVE_ESTILO = "estilo_color"
+        const val CLAVE_MODO = "modo_tema"
+        const val CLAVE_PLUS = "plus"
     }
 }
 
