@@ -51,6 +51,7 @@ Antes de cada versión nueva, subir `versionCode` (y `versionName`) en `app/buil
 > • "Barato esta semana": lo que bajó de precio.
 > • "Está caro, mejor cambia": si el jitomate subió, te dice qué sustituto está barato.
 > • Mi mandado: arma tu lista y calcula cuánto vas a gastar. Compártela por WhatsApp.
+> • Avisos: te llega una notificación cuando baja un producto que sigues.
 > • Mis precios: guarda lo que pagaste y compáralo.
 > • Gráfica de 12 semanas y comparación con mercados cercanos.
 > • Funciona sin internet con los últimos datos descargados.
@@ -63,8 +64,13 @@ Antes de cada versión nueva, subir `versionCode` (y `versionName`) en `app/buil
 
 **Categoría:** Compras (o Estilo de vida). **Etiquetas:** precios, mercado, ahorro.
 
-**Gráficos:** ícono 512 px (`diseno/play_store_512.png`), imagen destacada 1024×500 (pendiente),
-2 a 8 capturas de teléfono (lista, detalle con semáforo, mandado, equivalencias).
+**Gráficos (listos en `diseno/play/`):**
+* Ícono 512 px: `diseno/play_store_512.png`.
+* Imagen destacada 1024×500: `diseno/play/destacada_1024x500.png`.
+* 6 capturas de teléfono 1080×1920 (`01_lista` … `06_oscuro`), en ese orden. Play pide que el lado
+  largo no pase del doble del corto; las capturas directas del emulador (1080×2400) no sirven tal cual.
+* Se generan con un script de Pillow (fondo, título y la captura con marco) a partir de capturas del
+  emulador con la barra de estado en modo demo (10:00, batería llena) y Plus de prueba (sin anuncio).
 
 ## 6. Formularios de Play Console
 * **Acceso a la app:** todo disponible sin cuenta.
@@ -77,6 +83,7 @@ Antes de cada versión nueva, subir `versionCode` (y `versionName`) en `app/buil
     y **estadísticas**, no opcional en la versión gratuita.
   * *Información y rendimiento de la app* (diagnósticos/fallas de AdMob): recopilado, estadísticas.
   * *Ubicación aproximada*: **no** se recopila (se usa solo en el teléfono, no sale de él).
+  * Los productos seguidos para avisos se quedan en el teléfono: no cuentan como datos recopilados.
   * Datos cifrados en tránsito: **Sí**. Opción para borrar datos: no aplica (no hay cuenta).
 * **Países:** empezar solo con **México** (evita el formulario de consentimiento europeo, GDPR).
 * **ID de publicidad:** declarar que la app lo usa (AdMob agrega el permiso `AD_ID`).
