@@ -60,12 +60,13 @@ fun rangoMeses(meses: List<Int>): String {
     return if (textos.size == 1) textos[0] else textos.dropLast(1).joinToString(", ") + " y " + textos.last()
 }
 
-/** Productos del mercado que están en temporada este mes, del más barato al menos, uno por producto. */
+/** Productos del mercado que están en temporada este mes, de los que más bajan a los que menos, uno por producto. */
 fun Temporada.deTemporada(productos: List<Producto>, mes: Int = mesActual(), max: Int = 8): List<Pair<Producto, Double>> =
     productos.asSequence()
         .filter { it.resumen() != null }
         .mapNotNull { p -> indice(p.id)?.get(mes)?.takeIf { it <= UMBRAL_TEMPORADA }?.let { p to it } }
-        .groupBy { it.first.nombreBase() }.values.map { v -> v.minBy { it.second } }
+        // Una tarjeta por producto (plátano Chiapas y Tabasco cuentan como "plátano"): la variedad que más baja.
+        .groupBy { normalizar(it.first.nombre).substringBefore(' ') }.values.map { v -> v.minBy { it.second } }
         .sortedBy { it.second }
         .take(max)
         .toList()

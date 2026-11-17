@@ -126,6 +126,16 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
 * Gráfica del detalle con periodos 1 mes / 3 meses / 6 meses / 1 año, resumen "subió/bajó X %" y lectura por semana al tocar o deslizar. En 1 año se aclara que la inflación general es ~4 % anual.
 * Geometría: Natural Earth 1:10m (dominio público), simplificada con `diseno/generar_mapa.py` → `assets/estados.json` (42 KB).
 
+### ✔ Fase 3.13: Productos de temporada
+* `recolector/temporada.py`: 3 años extra de historia (nov 2022 – nov 2025) de 8 centrales grandes
+  (Iztapalapa, Guadalajara, Monterrey, Puebla, León, Mérida, Culiacán, Veracruz) + el año reciente = 4 temporadas.
+  Las descargas quedan en `recolector/historico/` (fuera de git, 18 MB); salida `data/temporada.json` (8 KB, 98 productos).
+* Método: cada mes ÷ mediana de los 12 meses alrededor (quita inflación y tendencias de un año) → mediana por mes del calendario.
+* Lista: "De temporada en <mes>" (productos que suelen bajar ≥ 8 % ese mes, una tarjeta por producto).
+* Detalle: tarjeta "Temporada" con "Suele estar más barato en dic–mar", el mes actual y 12 barras divergentes.
+* **Correrlo una vez al año** (noviembre): `python recolector/temporada.py` (ajustar `DESDE`/`HASTA`).
+* Pendiente: aviso "Empieza la temporada de …" en las notificaciones.
+
 ### ⏳ Fase 4: Antes de publicar en Google Play
 * ✔ Cuenta de desarrollador de Google Play: ya existe.
 * 📝 **Testers (pendiente, se ve más adelante):** las cuentas personales nuevas deben hacer una prueba cerrada con al menos 12 testers durante 14 días antes de poder publicar en producción. Ir juntando correos de familiares y amigos con Android.
@@ -142,7 +152,7 @@ Ordenadas de más fácil a más trabajo:
 
 1. ~~Equivalencias / sustitutos~~ ✅ (Fase 3.9). Pendiente: ampliar la tabla con lo que digan los usuarios.
 2. ~~**Calculadora / carrito de presupuesto.**~~ ✅ (Fase 3.10, falta lo de piezas). El usuario arma su lista ("2 kg jitomate, 1 kg cebolla, 3 aguacates…") y ve el costo estimado al menudeo (mayoreo × factor), con total y semáforo por producto. Para piezas (aguacate, piña, lechuga) hace falta un peso promedio por pieza. Guardar listas frecuentes ("mandado de la semana").
-3. **Productos de temporada.** Con el historial de 52 semanas se calcula en qué meses cada producto suele estar más barato. Sección "De temporada este mes" y aviso del tipo "Empieza la temporada de mandarina".
+3. ~~**Productos de temporada.**~~ ✅ (Fase 3.13). Con el historial de 52 semanas se calcula en qué meses cada producto suele estar más barato. Sección "De temporada este mes" y aviso del tipo "Empieza la temporada de mandarina".
 4. ~~**Avisos de precios bajos.**~~ ✅ (Fase 3.11). El usuario marca productos favoritos y recibe una notificación cuando bajan cierto % o están abajo de su promedio. Se puede hacer local: WorkManager revisa los datos nuevos cada miércoles y lanza una notificación, sin servidor. Requiere permiso de notificaciones (Android 13+).
 5. **Huevo y pollo** (ver sección 3). Huevo primero, porque cubre los mismos mercados.
 6. **Reportes de usuarios** ("pagué $X en el tianguis de Y") para tener precio de menudeo real; aquí entraría Firebase.
