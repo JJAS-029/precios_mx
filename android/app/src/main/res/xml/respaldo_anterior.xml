@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 y anteriores: lo mismo que reglas_respaldo.xml. -->
+<full-backup-content>
+    <include domain="sharedpref" path="preferencias.xml" />
+    <include domain="file" path="mis_precios.json" />
+</full-backup-content>

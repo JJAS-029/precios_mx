@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 12+: qué se respalda en la cuenta de Google del usuario (copia de seguridad automática,
+  cifrada en su Google Drive) y qué se pasa al cambiar de teléfono.
+  Solo lo que el usuario configuró: preferencias (mercado, tema, favoritos, avisos, mandado, listas)
+  y "Mis precios". Los precios descargados no: se vuelven a bajar.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="preferencias.xml" />
+        <include domain="file" path="mis_precios.json" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="preferencias.xml" />
+        <include domain="file" path="mis_precios.json" />
+    </device-transfer>
+</data-extraction-rules>

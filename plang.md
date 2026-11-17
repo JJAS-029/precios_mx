@@ -144,6 +144,13 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
   y no se muestran el mapa ni la comparación entre centrales (repetirían el mismo precio).
 * `python recolector/sniim.py --fuentes huevo|pollo|frutas` para descargar solo una fuente.
 
+### ✔ Fase 3.15: Favoritos y respaldo en la cuenta de Google
+* ⭐ en el detalle de cada producto; sección "★ Mis favoritos" arriba de la lista con su precio de la semana.
+* Copia de seguridad automática de Android (sin iniciar sesión): `res/xml/reglas_respaldo.xml` (Android 12+) y
+  `respaldo_anterior.xml` respaldan solo `preferencias.xml` (mercado, tema, favoritos, avisos, mandado, listas) y
+  `mis_precios.json`. Se restaura al instalar en un teléfono nuevo con la misma cuenta. Plus se restaura por Play.
+* Probar: `adb shell bmgr backupnow mx.acomo.app`, desinstalar, reinstalar → los datos vuelven.
+
 ### ⏳ Fase 4: Antes de publicar en Google Play
 * ✔ Cuenta de desarrollador de Google Play: ya existe.
 * 📝 **Testers (pendiente, se ve más adelante):** las cuentas personales nuevas deben hacer una prueba cerrada con al menos 12 testers durante 14 días antes de poder publicar en producción. Ir juntando correos de familiares y amigos con Android.
@@ -164,6 +171,12 @@ Ordenadas de más fácil a más trabajo:
 4. ~~**Avisos de precios bajos.**~~ ✅ (Fase 3.11). El usuario marca productos favoritos y recibe una notificación cuando bajan cierto % o están abajo de su promedio. Se puede hacer local: WorkManager revisa los datos nuevos cada miércoles y lanza una notificación, sin servidor. Requiere permiso de notificaciones (Android 13+).
 5. ~~**Huevo y pollo**~~ ✅ (Fase 3.14).
 6. **Reportes de usuarios** ("pagué $X en el tianguis de Y") para tener precio de menudeo real; aquí entraría Firebase.
+   *Decidido el 2026-11-17: después del lanzamiento.* Hace falta: (a) servidor (Firebase Firestore o similar) y
+   reglas contra spam/abuso (límite por dispositivo, valores fuera de rango); (b) moderación o filtrado automático
+   (descartar precios absurdos contra el mayoreo); (c) actualizar el aviso de privacidad y el formulario de
+   seguridad de datos de Play (la app empezaría a enviar datos: precio, producto, mercado, fecha); (d) mostrar el
+   promedio de reportes solo con un mínimo de reportes por producto y semana, para no exponer a nadie.
+   Con esto se calibraría el factor de menudeo con precios reales.
 7. ~~**Mapa**~~ ✅ (Fase 3.12, mapa de precios por estado). **Mapa de mercados.** Opcional; el buscador con ubicación ya resuelve la selección. Un mapa requiere el SDK de Google Maps (API key) u OpenStreetMap (osmdroid).
 8. Datos abiertos de PROFECO (Quién es Quién en los Precios) para calibrar el factor de menudeo.
    *Investigado el 2026-11-17:* el portal qqp.profeco.gob.mx permite consultar, pero no se encontró una descarga

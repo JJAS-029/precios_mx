@@ -140,6 +140,9 @@ fun PantallaLista(
             conResumen.filter { it.first.coincide(busqueda) }
         }
         val cambios = remember(datos) { sugerenciasCambio(datos.productos) }
+        val favoritos = remember(conResumen, estado.favoritos) {
+            conResumen.filter { it.first.id in estado.favoritos }
+        }
         val deTemporada = remember(datos, estado.temporada) {
             estado.temporada?.deTemporada(datos.productos).orEmpty()
         }
@@ -179,6 +182,12 @@ fun PantallaLista(
                     item { Aviso(msg) }
                 }
 
+                if (busqueda.isBlank() && favoritos.isNotEmpty()) {
+                    item { Encabezado("★ Mis favoritos") }
+                    items(favoritos, key = { "f-" + it.first.id }) { (p, r) ->
+                        FilaProducto(p, r, onAbrirProducto)
+                    }
+                }
                 if (busqueda.isBlank() && baratos.isNotEmpty()) {
                     item { Encabezado("Barato esta semana") }
                     item {
@@ -200,7 +209,7 @@ fun PantallaLista(
                     item { Encabezado("Está caro, mejor cambia") }
                     item { SeccionCambios(cambios, onAbrirProducto) }
                 }
-                if (busqueda.isBlank() && (baratos.isNotEmpty() || cambios.isNotEmpty() || deTemporada.isNotEmpty())) {
+                if (busqueda.isBlank() && (favoritos.isNotEmpty() || baratos.isNotEmpty() || cambios.isNotEmpty() || deTemporada.isNotEmpty())) {
                     item { Encabezado("Todos los productos") }
                 }
 

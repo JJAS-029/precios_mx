@@ -48,6 +48,8 @@ data class EstadoUi(
     val listas: List<ListaGuardada> = emptyList(),
     /** Productos con aviso de bajada: id -> nombre. */
     val seguidos: Map<String, String> = emptyMap(),
+    /** Productos favoritos: id -> nombre. */
+    val favoritos: Map<String, String> = emptyMap(),
     val avisos: Boolean = true,
     val avisosTemporada: Boolean = true,
     /** Índice de temporada por producto (varios años de historia). */
@@ -74,6 +76,7 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
             mandado = almacen.mandado,
             listas = almacen.listas,
             seguidos = almacen.seguidos,
+            favoritos = almacen.favoritos,
             avisos = almacen.avisos,
             avisosTemporada = almacen.avisosTemporada,
         ),
@@ -232,6 +235,15 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
         val nueva = cambio(_estado.value.mandado)
         almacen.mandado = nueva
         _estado.update { it.copy(mandado = nueva) }
+    }
+
+    // ----- favoritos
+
+    fun cambiarFavorito(producto: Producto) {
+        val actuales = _estado.value.favoritos
+        val nuevos = if (producto.id in actuales) actuales - producto.id else actuales + (producto.id to producto.nombreVisible)
+        almacen.favoritos = nuevos
+        _estado.update { it.copy(favoritos = nuevos) }
     }
 
     // ----- avisos de precios bajos

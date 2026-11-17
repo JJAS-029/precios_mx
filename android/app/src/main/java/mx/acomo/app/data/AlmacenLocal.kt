@@ -78,6 +78,13 @@ class AlmacenLocal(
         }.getOrDefault(emptyMap())
         set(v) = prefs.edit().putString(CLAVE_SEGUIDOS, json.encodeToString(v)).apply()
 
+    /** Productos favoritos: id -> nombre (el id es el mismo en todos los mercados). */
+    var favoritos: Map<String, String>
+        get() = runCatching {
+            json.decodeFromString<Map<String, String>>(prefs.getString(CLAVE_FAVORITOS, null) ?: "{}")
+        }.getOrDefault(emptyMap())
+        set(v) = prefs.edit().putString(CLAVE_FAVORITOS, json.encodeToString(v)).apply()
+
     /** Interruptor general de avisos (Ajustes). */
     var avisos: Boolean
         get() = prefs.getBoolean(CLAVE_AVISOS, true)
@@ -124,6 +131,7 @@ class AlmacenLocal(
         private const val CLAVE_MANDADO = "mandado"
         private const val CLAVE_LISTAS = "listas"
         private const val CLAVE_SEGUIDOS = "seguidos"
+        private const val CLAVE_FAVORITOS = "favoritos"
         private const val CLAVE_AVISOS = "avisos"
         private const val CLAVE_AVISOS_TEMPORADA = "avisos_temporada"
         private const val CLAVE_MES_TEMPORADA = "mes_temporada"

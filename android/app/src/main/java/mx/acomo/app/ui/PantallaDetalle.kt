@@ -83,6 +83,8 @@ fun PantallaDetalle(
     /** ¿Tiene aviso de bajada? */
     seguido: Boolean,
     onSeguir: (Boolean) -> Unit,
+    favorito: Boolean,
+    onFavorito: () -> Unit,
     /** Índice de temporada (12 meses) o null si no hay suficiente historia. */
     temporada: List<Double?>?,
     aniosTemporada: String,
@@ -104,6 +106,15 @@ fun PantallaDetalle(
                 navigationIcon = {
                     IconButton(onClick = onVolver) {
                         Text("←", style = MaterialTheme.typography.titleLarge)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onFavorito) {
+                        Text(
+                            if (favorito) "★" else "☆",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = if (favorito) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 },
             )

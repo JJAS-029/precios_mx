@@ -101,6 +101,8 @@ private fun App(vm: PreciosViewModel, productoInicial: String?) {
                 onAbrirMandado = { productoId = null; mandado = true },
                 seguido = producto.id in estado.seguidos,
                 onSeguir = { vm.seguir(producto, it) },
+                favorito = producto.id in estado.favoritos,
+                onFavorito = { vm.cambiarFavorito(producto) },
                 temporada = estado.temporada?.indice(producto.id),
                 aniosTemporada = estado.temporada?.desde?.take(4)?.toIntOrNull()
                     ?.let { "${java.time.LocalDate.now().year - it} años" } ?: "varios años",
