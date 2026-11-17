@@ -47,22 +47,24 @@ Antes de cada versión nueva, subir `versionCode` (y `versionName`) en `app/buil
 > cuánto es un precio justo en el mercado o tianguis.
 >
 > • Más de 40 centrales de abasto: elige la tuya o usa tu ubicación.
-> • Semáforo: escribe lo que te cobran y ve si es razonable, alto o muy caro.
+> • Semáforo: escribe lo que te cobran y ve si es buen precio, un poco caro o caro.
 > • "Barato esta semana": lo que bajó de precio.
 > • "Está caro, mejor cambia": si el jitomate subió, te dice qué sustituto está barato.
-> • Mi mandado: arma tu lista y calcula cuánto vas a gastar. Compártela por WhatsApp.
+> • Mi mandado: arma tu lista, calcula cuánto vas a gastar y compártela por WhatsApp.
 > • Avisos: te llega una notificación cuando baja un producto que sigues.
 > • Mis precios: guarda lo que pagaste y compáralo.
 > • Gráfica de 12 semanas y comparación con mercados cercanos.
-> • Funciona sin internet con los últimos datos descargados.
+> • Funciona sin internet con los últimos precios descargados.
 > • Modo oscuro.
->
-> ¿A cómo? Plus (pago único): sin anuncios y temas de color extra.
 >
 > Los precios de mayoreo son datos públicos del SNIIM. El precio de menudeo es un estimado.
 > Esta app no está afiliada a la Secretaría de Economía.
 
-**Categoría:** Compras (o Estilo de vida). **Etiquetas:** precios, mercado, ahorro.
+**Categoría:** Compras. **Sitio web:** `https://jjas-029.github.io/acomo/` · **Condiciones:** `https://jjas-029.github.io/acomo/condiciones.html`.
+
+*Agregar la línea "¿A cómo? Plus (pago único): sin anuncios y temas de color extra." cuando el cobro esté activo.*
+
+ **Etiquetas:** precios, mercado, ahorro.
 
 **Gráficos (listos en `diseno/play/`):**
 * Ícono 512 px: `diseno/play_store_512.png`.
