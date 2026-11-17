@@ -30,6 +30,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import kotlin.math.hypot
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -73,32 +78,64 @@ private suspend fun cargarMapa(contexto: Context): MapaEstados = mapaEnMemoria ?
     Json { ignoreUnknownKeys = true }.decodeFromString<MapaEstados>(texto)
 }.also { mapaEnMemoria = it }
 
-/** Mapa de México con el precio del producto por estado. No se muestra si hay muy pocos mercados. */
+/** Mapa de México con el precio del producto por estado o por central. No se muestra si hay muy pocos mercados. */
 @Composable
 fun TarjetaMapa(indice: Indice, productoId: String, mercado: Mercado) {
     val pais = remember(indice, productoId) { indice.preciosPorEstado(productoId) } ?: return
     val contexto = LocalContext.current
     val mapa by produceState(mapaEnMemoria, contexto) { if (value == null) value = runCatching { cargarMapa(contexto) }.getOrNull() }
     val m = mapa ?: return
-    var elegido by rememberSaveable(productoId) { mutableStateOf(mercado.estado) }
+    var porCentral by rememberSaveable { mutableStateOf(false) }
+    var estadoElegido by rememberSaveable(productoId) { mutableStateOf(mercado.estado) }
+    var centralElegida by rememberSaveable(productoId) { mutableStateOf(mercado.id) }
     var verLista by rememberSaveable(productoId) { mutableStateOf(false) }
     val oscuro = fondoOscuro()
 
     Tarjeta {
         Text("En el país", style = MaterialTheme.typography.titleSmall)
         Text(
-            "Precio típico: ${pesos(pais.tipico)}/kg (mediana de las centrales de abasto). Toca un estado.",
+            "Precio típico: ${pesos(pais.tipico)}/kg (mediana de las centrales de abasto). " +
+                if (porCentral) "Toca una central." else "Toca un estado.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        MapaMexico(m, pais, elegido, oscuro, Modifier.padding(top = 12.dp)) { elegido = it }
-        val conCentral = remember(indice) { indice.mercados.map { it.estado }.toSet() }
-        DetalleEstado(pais, elegido, elegido in conCentral)
-        Leyenda(oscuro)
-        TextButton(onClick = { verLista = !verLista }, contentPadding = PaddingValues(0.dp)) {
-            Text(if (verLista) "Ocultar lista" else "Ver todos los estados")
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            listOf(false to "Por estado", true to "Por central").forEachIndexed { i, (valor, texto) ->
+                SegmentedButton(
+                    selected = porCentral == valor,
+                    onClick = { porCentral = valor },
+                    shape = SegmentedButtonDefaults.itemShape(i, 2),
+                ) { Text(texto, maxLines = 1) }
+            }
         }
-        if (verLista) ListaEstados(pais, mercado.estado)
+        if (porCentral) {
+            MapaCentrales(m, pais, centralElegida, oscuro, Modifier.padding(top = 12.dp)) { centralElegida = it }
+            DetalleCentral(pais, centralElegida)
+        } else {
+            MapaMexico(m, pais, estadoElegido, oscuro, Modifier.padding(top = 12.dp)) { estadoElegido = it }
+            val conCentral = remember(indice) { indice.mercados.map { it.estado }.toSet() }
+            DetalleEstado(pais, estadoElegido, estadoElegido in conCentral)
+        }
+        Leyenda(oscuro, sinDatos = !porCentral)
+        TextButton(onClick = { verLista = !verLista }, contentPadding = PaddingValues(0.dp)) {
+            Text(if (verLista) "Ocultar lista" else if (porCentral) "Ver todas las centrales" else "Ver todos los estados")
+        }
+        if (verLista) {
+            if (porCentral) ListaCentrales(pais, mercado.id) else ListaEstados(pais, mercado.estado)
+        }
+    }
+}
+
+@Composable
+private fun rememberTrazos(mapa: MapaEstados) = remember(mapa) {
+    mapa.estados.associate { e ->
+        e.nombre to Path().apply {
+            e.anillos.forEach { a ->
+                moveTo(a[0], a[1])
+                for (i in 2 until a.size step 2) lineTo(a[i], a[i + 1])
+                close()
+            }
+        }
     }
 }
 
@@ -111,17 +148,7 @@ private fun MapaMexico(
     modifier: Modifier,
     onElegir: (String) -> Unit,
 ) {
-    val trazos = remember(mapa) {
-        mapa.estados.associate { e ->
-            e.nombre to Path().apply {
-                e.anillos.forEach { a ->
-                    moveTo(a[0], a[1])
-                    for (i in 2 until a.size step 2) lineTo(a[i], a[i + 1])
-                    close()
-                }
-            }
-        }
-    }
+    val trazos = rememberTrazos(mapa)
     val separador = MaterialTheme.colorScheme.surfaceContainer
     val sinDatos = MaterialTheme.colorScheme.outline
     val resalte = MaterialTheme.colorScheme.onSurface
@@ -136,7 +163,7 @@ private fun MapaMexico(
             },
     ) {
         val w = size.width
-        scale(w, w, pivot = androidx.compose.ui.geometry.Offset.Zero) {
+        scale(w, w, pivot = Offset.Zero) {
             val linea = 1.dp.toPx() / w
             trazos.forEach { (nombre, trazo) ->
                 val dato = pais.estados[nombre]
@@ -149,6 +176,100 @@ private fun MapaMexico(
                 }
             }
             trazos[elegido]?.let { drawPath(it, resalte, style = Stroke(linea * 2.5f)) }
+        }
+    }
+}
+
+/** Un punto por central, en su ciudad, sobre los estados en gris. */
+@Composable
+private fun MapaCentrales(
+    mapa: MapaEstados,
+    pais: PreciosPais,
+    elegida: String?,
+    oscuro: Boolean,
+    modifier: Modifier,
+    onElegir: (String) -> Unit,
+) {
+    val trazos = rememberTrazos(mapa)
+    val fondo = MaterialTheme.colorScheme.surfaceContainerHighest
+    val bordes = MaterialTheme.colorScheme.outlineVariant
+    val anillo = MaterialTheme.colorScheme.surfaceContainer
+    val resalte = MaterialTheme.colorScheme.onSurface
+    // Las más caras se dibujan al final para que queden encima donde se enciman.
+    val puntos = remember(mapa, pais) {
+        pais.mercados.sortedBy { it.second }.map { (m, precio) -> Triple(m, precio, mapa.punto(m.lat, m.lon)) }
+    }
+    Canvas(
+        modifier
+            .fillMaxWidth()
+            .aspectRatio(1f / mapa.alto)
+            .pointerInput(puntos) {
+                detectTapGestures { p ->
+                    val w = size.width
+                    fun distancia(xy: Pair<Float, Float>) = hypot(xy.first * w - p.x, xy.second * w - p.y)
+                    puntos.minByOrNull { distancia(it.third) }
+                        ?.takeIf { distancia(it.third) < 32.dp.toPx() }
+                        ?.let { onElegir(it.first.id) }
+                }
+            },
+    ) {
+        val w = size.width
+        scale(w, w, pivot = Offset.Zero) {
+            val linea = 1.dp.toPx() / w
+            trazos.values.forEach { trazo ->
+                drawPath(trazo, fondo, style = Fill)
+                drawPath(trazo, bordes, style = Stroke(linea))
+            }
+        }
+        val radio = 6.dp.toPx()
+        puntos.forEach { (m, precio, xy) ->
+            val c = Offset(xy.first * w, xy.second * w)
+            drawCircle(anillo, radius = radio + 2.dp.toPx(), center = c)
+            drawCircle(ColoresMapa.de(pais.nivel(precio), oscuro), radius = radio, center = c)
+            if (m.id == elegida) drawCircle(resalte, radius = radio + 3.dp.toPx(), center = c, style = Stroke(2.dp.toPx()))
+        }
+    }
+}
+
+@Composable
+private fun DetalleCentral(pais: PreciosPais, id: String?) {
+    val dato = pais.mercados.find { it.first.id == id }
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        if (dato == null) {
+            Text(
+                "Tu central no ha reportado este producto en las últimas semanas. Toca otra en el mapa.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            return@Column
+        }
+        val (m, precio) = dato
+        Text("${m.ciudad}, ${m.estado}", fontWeight = FontWeight.Bold)
+        Text("${pesos(precio)}/kg · ${comparacion(pais.diferencia(precio))}", style = MaterialTheme.typography.bodyMedium)
+        Text(m.nombre, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+private fun comparacion(d: Double): String =
+    if (d.roundToInt() == 0) "igual que lo típico"
+    else "${porcentaje(d).removePrefix("+").removePrefix("-")} ${if (d < 0) "más barato" else "más caro"} que lo típico"
+
+@Composable
+private fun ListaCentrales(pais: PreciosPais, propia: String) {
+    pais.mercados.sortedBy { it.second }.forEach { (m, precio) ->
+        val esPropia = m.id == propia
+        Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(m.ciudad, fontWeight = if (esPropia) FontWeight.Bold else FontWeight.Normal, style = MaterialTheme.typography.bodyMedium)
+                Text(m.estado, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text(
+                pais.nivel(precio).texto,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(end = 8.dp),
+            )
+            Text(pesos(precio), fontWeight = if (esPropia) FontWeight.Bold else FontWeight.Normal)
         }
     }
 }
@@ -167,10 +288,7 @@ private fun DetalleEstado(pais: PreciosPais, estado: String?, tieneCentral: Bool
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         } else {
-            val d = pais.diferencia(dato)
-            val comparacion = if (d.roundToInt() == 0) "igual que lo típico" else
-                "${porcentaje(d).removePrefix("+").removePrefix("-")} ${if (d < 0) "más barato" else "más caro"} que lo típico"
-            Text("${pesos(dato.precio)}/kg · $comparacion", style = MaterialTheme.typography.bodyMedium)
+            Text("${pesos(dato.precio)}/kg · ${comparacion(pais.diferencia(dato))}", style = MaterialTheme.typography.bodyMedium)
             val ciudades = dato.mercados.map { it.ciudad }.distinct()
             val n = dato.mercados.size
             Text(
@@ -187,22 +305,24 @@ private fun DetalleEstado(pais: PreciosPais, estado: String?, tieneCentral: Bool
 }
 
 @Composable
-private fun Leyenda(oscuro: Boolean) {
+private fun Leyenda(oscuro: Boolean, sinDatos: Boolean) {
     Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
             NivelPrecio.entries.forEach { n ->
                 Box(Modifier.size(width = 28.dp, height = 12.dp).background(ColoresMapa.de(n, oscuro), RoundedCornerShape(3.dp)))
             }
-            Spacer(Modifier.width(12.dp))
-            Box(
-                Modifier.size(width = 28.dp, height = 12.dp)
-                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(3.dp)),
-            )
-            Text(
-                " Sin datos",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (sinDatos) {
+                Spacer(Modifier.width(12.dp))
+                Box(
+                    Modifier.size(width = 28.dp, height = 12.dp)
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(3.dp)),
+                )
+                Text(
+                    " Sin datos",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         Row(Modifier.width((28 * 5 + 3 * 4).dp)) {
             Text("Más barato", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

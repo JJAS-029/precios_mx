@@ -122,6 +122,8 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
   Estados con varias centrales: promedio. Sin dato: solo contorno.
 * Por municipio no: el SNIIM solo publica ~45 centrales (una o dos por estado).
 * Tocar un estado muestra su precio y sus mercados; "Ver todos los estados" da la lista ordenada (no depende del color).
+* Selector "Por estado / Por central": en "Por central" cada central es un punto en su ciudad (se ve, p. ej., Toluca vs. Ecatepec dentro del Estado de México).
+* Gráfica del detalle con periodos 1 mes / 3 meses / 6 meses / 1 año, resumen "subió/bajó X %" y lectura por semana al tocar o deslizar. En 1 año se aclara que la inflación general es ~4 % anual.
 * Geometría: Natural Earth 1:10m (dominio público), simplificada con `diseno/generar_mapa.py` → `assets/estados.json` (42 KB).
 
 ### ⏳ Fase 4: Antes de publicar en Google Play

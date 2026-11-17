@@ -73,6 +73,17 @@ fun Producto.coincide(busqueda: String): Boolean {
 /** Historial del producto, de la semana más antigua a la más reciente. */
 fun Producto.serie(): List<PrecioSemana> = semanas.sortedBy { it.semana }
 
+/**
+ * Semanas dentro de las últimas [semanas] contando desde la más reciente del producto
+ * (por fecha, así las semanas sin dato no alargan el periodo).
+ */
+fun Producto.serieUltimas(semanas: Int): List<PrecioSemana> {
+    val s = serie()
+    val ultima = s.lastOrNull() ?: return emptyList()
+    val corte = lunesDeSemana(ultima.semana).minusWeeks((semanas - 1).toLong())
+    return s.filter { !lunesDeSemana(it.semana).isBefore(corte) }
+}
+
 data class Resumen(
     val actual: PrecioSemana,
     /** Variación % contra la semana anterior con datos (null si no hay). */

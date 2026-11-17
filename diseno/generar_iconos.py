@@ -5,7 +5,7 @@
 
 Salidas:
   * android/.../mipmap-*/ic_launcher_foreground.png  capa frontal del ícono adaptativo (insignia completa)
-  * android/.../drawable-nodpi/logo_koala.png        logo pequeño para usar dentro de la app
+  * android/.../drawable-nodpi/logo_koala.png        logo de la barra superior (insignia completa)
   * diseno/play_store_512.png                        ícono de alta resolución para Google Play (insignia completa)
 """
 
@@ -17,10 +17,6 @@ RAIZ = Path(__file__).resolve().parent.parent
 LOGO = RAIZ / "diseno" / "logo_original.jpg"
 RES = RAIZ / "android" / "app" / "src" / "main" / "res"
 
-# Círculo (en píxeles del logo original) que contiene al koala con sus verduras, sin el texto.
-CENTRO = (370, 420)
-RADIO = 235
-
 # Insignia completa (aro verde con "¿A CÓMO?"): círculo exterior en píxeles del logo original.
 CENTRO_INSIGNIA = (370, 353)
 RADIO_INSIGNIA = 346
@@ -31,18 +27,6 @@ RADIO_INSIGNIA = 346
 DENSIDADES = {"mdpi": 1.0, "hdpi": 1.5, "xhdpi": 2.0, "xxhdpi": 3.0, "xxxhdpi": 4.0}
 LIENZO_DP = 108
 INSIGNIA_DP = 66
-
-
-def koala_circular(tamano: int) -> Image.Image:
-    """Recorte circular del koala, con transparencia fuera del círculo."""
-    logo = Image.open(LOGO).convert("RGBA")
-    x, y = CENTRO
-    recorte = logo.crop((x - RADIO, y - RADIO, x + RADIO, y + RADIO)).resize((tamano, tamano), Image.LANCZOS)
-    # Máscara con antialiasing: se dibuja 4x más grande y se reduce.
-    grande = Image.new("L", (tamano * 4, tamano * 4), 0)
-    ImageDraw.Draw(grande).ellipse((0, 0, tamano * 4 - 1, tamano * 4 - 1), fill=255)
-    recorte.putalpha(grande.resize((tamano, tamano), Image.LANCZOS))
-    return recorte
 
 
 def insignia(tamano: int) -> Image.Image:
@@ -72,7 +56,8 @@ def main() -> None:
 
     nodpi = RES / "drawable-nodpi"
     nodpi.mkdir(parents=True, exist_ok=True)
-    koala_circular(192).save(nodpi / "logo_koala.png", optimize=True)
+    # Logo de la barra superior: la misma insignia completa que el ícono, con fondo transparente.
+    insignia(192).save(nodpi / "logo_koala.png", optimize=True)
     print((nodpi / "logo_koala.png").relative_to(RAIZ))
 
     # Google Play pide 512x512 PNG y lo muestra con esquinas redondeadas: insignia al 88 % con margen blanco.

@@ -5,7 +5,20 @@ import kotlin.math.abs
 
 /** assets/estados.json, generado por diseno/generar_mapa.py (Natural Earth, dominio público). */
 @Serializable
-data class MapaEstados(val ancho: Float, val alto: Float, val estados: List<EstadoMapa>)
+data class MapaEstados(
+    val ancho: Float,
+    val alto: Float,
+    val proyeccion: Proyeccion = Proyeccion(),
+    val estados: List<EstadoMapa>,
+) {
+    /** Posición normalizada (como los contornos) de una latitud/longitud. */
+    fun punto(lat: Double, lon: Double): Pair<Float, Float> = with(proyeccion) {
+        ((lon * cos - x0) * escala).toFloat() to ((y1 - lat) * escala).toFloat()
+    }
+}
+
+@Serializable
+data class Proyeccion(val cos: Double = 1.0, val x0: Double = 0.0, val y1: Double = 0.0, val escala: Double = 1.0)
 
 /** [anillos]: polígonos como x0, y0, x1, y1… en coordenadas normalizadas (x de 0 a 1, y hacia abajo). */
 @Serializable
@@ -39,9 +52,13 @@ data class PreciosPais(
     /** Mediana de los precios de todos los mercados con dato. */
     val tipico: Double,
     val estados: Map<String, PrecioEstado>,
+    /** Cada central con su precio (para el mapa "por central"). */
+    val mercados: List<Pair<Mercado, Double>> = emptyList(),
 ) {
-    fun diferencia(e: PrecioEstado): Double = (e.precio / tipico - 1) * 100
-    fun nivel(e: PrecioEstado): NivelPrecio = NivelPrecio.de(diferencia(e))
+    fun diferencia(precio: Double): Double = (precio / tipico - 1) * 100
+    fun diferencia(e: PrecioEstado): Double = diferencia(e.precio)
+    fun nivel(precio: Double): NivelPrecio = NivelPrecio.de(diferencia(precio))
+    fun nivel(e: PrecioEstado): NivelPrecio = nivel(e.precio)
     val masBarato: PrecioEstado? get() = estados.values.minByOrNull { it.precio }
     val masCaro: PrecioEstado? get() = estados.values.maxByOrNull { it.precio }
 }
@@ -57,7 +74,7 @@ fun Indice.preciosPorEstado(productoId: String): PreciosPais? {
     val estados = conPrecio.groupBy { it.first.estado }.mapValues { (estado, lista) ->
         PrecioEstado(estado, lista.sumOf { it.second } / lista.size, lista.map { it.first })
     }
-    return PreciosPais(mediana, estados)
+    return PreciosPais(mediana, estados, conPrecio)
 }
 
 /** Estado que contiene el punto (coordenadas normalizadas), o el más cercano a 0.02 si se tocó en el borde. */

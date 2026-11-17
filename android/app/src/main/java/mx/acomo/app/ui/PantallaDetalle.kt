@@ -58,7 +58,6 @@ import mx.acomo.app.data.resumen
 import mx.acomo.app.data.serie
 import mx.acomo.app.ui.theme.ColoresSemaforo
 
-private const val SEMANAS_GRAFICA = 12
 private const val MERCADOS_COMPARACION = 4
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
@@ -175,10 +174,7 @@ fun PantallaDetalle(
             temporada?.let { TarjetaTemporada(it, aniosTemporada) }
 
             // ----- gráfica
-            Tarjeta {
-                Text("Últimas $SEMANAS_GRAFICA semanas", style = MaterialTheme.typography.titleSmall)
-                GraficaPrecios(producto.serie().takeLast(SEMANAS_GRAFICA), Modifier.padding(top = 8.dp))
-            }
+            TarjetaGrafica(producto, mercado.ciudad)
 
             // ----- mapa por estado
             TarjetaMapa(indice, producto.id, mercado)

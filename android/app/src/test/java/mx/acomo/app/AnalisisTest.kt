@@ -142,7 +142,7 @@ class AnalisisTest {
         // Con menos de 3 mercados no hay mapa.
         assertEquals(null, indice.copy(ultimos = mapOf("x" to mapOf("a" to 1.0, "c" to 2.0))).preciosPorEstado("x"))
 
-        val mapa = MapaEstados(1f, 1f, listOf(
+        val mapa = MapaEstados(ancho = 1f, alto = 1f, estados = listOf(
             EstadoMapa("Izquierda", listOf(listOf(0f, 0f, 0.5f, 0f, 0.5f, 1f, 0f, 1f))),
             EstadoMapa("Derecha", listOf(listOf(0.5f, 0f, 1f, 0f, 1f, 1f, 0.5f, 1f))),
         ))

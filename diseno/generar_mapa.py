@@ -6,7 +6,7 @@ Fuente: Natural Earth, "Admin 1 – States, Provinces" 1:10m (dominio público).
     .venv/Scripts/python -m pip install pyshp shapely
     .venv/Scripts/python diseno/generar_mapa.py <carpeta>/ne_10m_admin_1_states_provinces
 
-Salida: {"ancho": 1, "alto": a, "estados": [{"nombre": "Jalisco", "anillos": [[x0, y0, x1, y1, ...], ...]}]}
+Salida: {"ancho": 1, "alto": a, "proyeccion": {...}, "estados": [{"nombre": "Jalisco", "anillos": [[x0, y0, x1, y1, ...], ...]}]}
 Coordenadas ya proyectadas (equirectangular con cos(23.5°)) y normalizadas: x en [0, 1], y en [0, alto],
 con y hacia abajo como en la pantalla. Los nombres coinciden con Mercado.estado de indice.json.
 """
@@ -55,7 +55,9 @@ def main() -> None:
         ]
     estados.sort(key=lambda e: e["nombre"])
     SALIDA.parent.mkdir(parents=True, exist_ok=True)
-    datos = {"ancho": 1, "alto": round((y1 - y0) * escala, 4), "estados": estados}
+    # Para ubicar puntos (lat, lon) en la app: x = (lon * cos - x0) * escala ; y = (y1 - lat) * escala
+    proyeccion = {"cos": round(COS_LAT, 6), "x0": round(x0, 6), "y1": round(y1, 6), "escala": round(escala, 6)}
+    datos = {"ancho": 1, "alto": round((y1 - y0) * escala, 4), "proyeccion": proyeccion, "estados": estados}
     SALIDA.write_text(json.dumps(datos, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     puntos = sum(len(a) // 2 for e in estados for a in e["anillos"])
     print(f"{SALIDA.relative_to(RAIZ)}: {len(estados)} estados, {puntos} puntos, {SALIDA.stat().st_size // 1024} KB")
