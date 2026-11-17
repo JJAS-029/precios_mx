@@ -1,7 +1,6 @@
 package mx.acomo.app.ui
 
 import android.app.Application
-import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
@@ -10,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mx.acomo.app.BuildConfig
+import mx.acomo.app.AvisosPrecios
 import mx.acomo.app.data.AlmacenLocal
 import mx.acomo.app.data.ArticuloMandado
 import mx.acomo.app.data.DatosMercado
@@ -24,7 +23,6 @@ import mx.acomo.app.data.hoy
 import mx.acomo.app.data.nombreVisible
 import mx.acomo.app.ui.theme.EstiloColor
 import mx.acomo.app.ui.theme.ModoTema
-import java.io.File
 
 data class EstadoUi(
     val indice: Indice? = null,
@@ -41,6 +39,9 @@ data class EstadoUi(
     val modo: ModoTema = ModoTema.SISTEMA,
     val plus: Boolean = false,
     val mandado: List<ArticuloMandado> = emptyList(),
+    /** Productos con aviso de bajada: id -> nombre. */
+    val seguidos: Map<String, String> = emptyMap(),
+    val avisos: Boolean = true,
 ) {
     val mercadoActual: Mercado? get() = indice?.mercados?.find { it.id == mercado }
 
@@ -50,11 +51,8 @@ data class EstadoUi(
 
 class PreciosViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val repo = Repositorio(BuildConfig.URL_DATOS, File(app.filesDir, "datos"))
-    private val almacen = AlmacenLocal(
-        File(app.filesDir, "mis_precios.json"),
-        app.getSharedPreferences("preferencias", Context.MODE_PRIVATE),
-    )
+    private val repo = Repositorio.de(app)
+    private val almacen = AlmacenLocal.de(app)
 
     private val _estado = MutableStateFlow(
         EstadoUi(
@@ -64,6 +62,8 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
             modo = ModoTema.desde(almacen.modoTema),
             plus = almacen.plus,
             mandado = almacen.mandado,
+            seguidos = almacen.seguidos,
+            avisos = almacen.avisos,
         ),
     )
     val estado: StateFlow<EstadoUi> = _estado.asStateFlow()
@@ -71,6 +71,7 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
     private var cargaMercado: Job? = null
 
     init {
+        AvisosPrecios.programar(app)
         viewModelScope.launch {
             val registros = almacen.registros()
             val indice = repo.indiceCache()
@@ -175,6 +176,34 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
         val nueva = cambio(_estado.value.mandado)
         almacen.mandado = nueva
         _estado.update { it.copy(mandado = nueva) }
+    }
+
+    // ----- avisos de precios bajos
+
+    fun seguir(producto: Producto, activo: Boolean) {
+        val nuevos = if (activo) _estado.value.seguidos + (producto.id to producto.nombreVisible)
+        else _estado.value.seguidos - producto.id
+        // Al seguir el primer producto, la semana actual ya la está viendo: avisar desde la siguiente.
+        if (activo && almacen.semanaAvisada.isBlank()) {
+            _estado.value.datosActuales?.semanas?.lastOrNull()?.let { almacen.semanaAvisada = it }
+        }
+        almacen.seguidos = nuevos
+        if (activo && !almacen.avisos) almacen.avisos = true
+        _estado.update { it.copy(seguidos = nuevos, avisos = almacen.avisos) }
+        AvisosPrecios.programar(getApplication())
+    }
+
+    fun dejarDeSeguir(productoId: String) {
+        val nuevos = _estado.value.seguidos - productoId
+        almacen.seguidos = nuevos
+        _estado.update { it.copy(seguidos = nuevos) }
+        AvisosPrecios.programar(getApplication())
+    }
+
+    fun cambiarAvisos(activo: Boolean) {
+        almacen.avisos = activo
+        _estado.update { it.copy(avisos = activo) }
+        AvisosPrecios.programar(getApplication())
     }
 
     fun borrarRegistro(id: Long) {

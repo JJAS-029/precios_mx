@@ -1,6 +1,8 @@
 package mx.acomo.app.data
 
+import android.content.Context
 import kotlinx.coroutines.Dispatchers
+import mx.acomo.app.BuildConfig
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -18,6 +20,10 @@ class Repositorio(
     private val dirCache: File,
 ) {
     private val json = Json { ignoreUnknownKeys = true }
+
+    companion object {
+        fun de(contexto: Context) = Repositorio(BuildConfig.URL_DATOS, File(contexto.filesDir, "datos"))
+    }
 
     suspend fun indiceCache(): Indice? = leer("indice.json")
     suspend fun mercadoCache(id: String): DatosMercado? = leer("mercados/$id.json")

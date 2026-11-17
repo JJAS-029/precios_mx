@@ -1,5 +1,13 @@
 package mx.acomo.app.ui
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.Switch
+import androidx.compose.runtime.remember
+import mx.acomo.app.AvisosPrecios
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -70,6 +78,9 @@ fun PantallaDetalle(
     kgEnMandado: Double?,
     onPonerEnMandado: (kg: Double) -> Unit,
     onAbrirMandado: () -> Unit,
+    /** ¿Tiene aviso de bajada? */
+    seguido: Boolean,
+    onSeguir: (Boolean) -> Unit,
     onVolver: () -> Unit,
 ) {
     Scaffold(
@@ -150,6 +161,9 @@ fun PantallaDetalle(
 
             // ----- mandado
             TarjetaMandado(producto, kgEnMandado, onPonerEnMandado, onAbrirMandado)
+
+            // ----- aviso de bajada
+            TarjetaAviso(seguido, onSeguir)
 
             // ----- equivalencias
             TarjetaAlternativas(producto, r, alternativas, onAbrirProducto)
@@ -319,6 +333,49 @@ private fun TarjetaMandado(
                 }
                 SelectorKg(kg) { onPoner(if (it < 0.25) 0.0 else it) }
             }
+        }
+    }
+}
+
+@Composable
+private fun TarjetaAviso(seguido: Boolean, onSeguir: (Boolean) -> Unit) {
+    val contexto = androidx.compose.ui.platform.LocalContext.current
+    var permiso by remember { mutableStateOf(AvisosPrecios.permisoConcedido(contexto)) }
+    // El aviso de "desactivadas" sale si ya estaba negado o después de que el usuario lo niega,
+    // no mientras el diálogo del sistema está abierto.
+    var mostrarNegado by remember { mutableStateOf(!permiso) }
+    val pedir = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        permiso = it
+        mostrarNegado = !it
+    }
+    Tarjeta {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("🔔 Avisarme cuando baje", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    "Te llega una notificación si baja 10% o más.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(
+                checked = seguido,
+                onCheckedChange = { activo ->
+                    onSeguir(activo)
+                    if (activo && !permiso && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        mostrarNegado = false
+                        pedir.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                },
+            )
+        }
+        if (seguido && !permiso && mostrarNegado) {
+            Text(
+                "Las notificaciones están desactivadas. Actívalas en los ajustes del teléfono para recibir el aviso.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 8.dp),
+            )
         }
     }
 }

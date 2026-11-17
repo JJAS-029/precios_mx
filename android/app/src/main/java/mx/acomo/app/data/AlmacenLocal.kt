@@ -1,5 +1,6 @@
 package mx.acomo.app.data
 
+import android.content.Context
 import android.content.SharedPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -70,6 +71,23 @@ class AlmacenLocal(
         }.getOrDefault(emptyList())
         set(v) = prefs.edit().putString(CLAVE_MANDADO, json.encodeToString(v)).apply()
 
+    /** Productos con aviso de bajada: id -> nombre (el id es el mismo en todos los mercados). */
+    var seguidos: Map<String, String>
+        get() = runCatching {
+            json.decodeFromString<Map<String, String>>(prefs.getString(CLAVE_SEGUIDOS, null) ?: "{}")
+        }.getOrDefault(emptyMap())
+        set(v) = prefs.edit().putString(CLAVE_SEGUIDOS, json.encodeToString(v)).apply()
+
+    /** Interruptor general de avisos (Ajustes). */
+    var avisos: Boolean
+        get() = prefs.getBoolean(CLAVE_AVISOS, true)
+        set(v) = prefs.edit().putBoolean(CLAVE_AVISOS, v).apply()
+
+    /** Última semana ISO ya revisada para avisos, para no avisar dos veces de la misma. */
+    var semanaAvisada: String
+        get() = prefs.getString(CLAVE_SEMANA_AVISADA, "").orEmpty()
+        set(v) = prefs.edit().putString(CLAVE_SEMANA_AVISADA, v).apply()
+
     suspend fun registros(): List<RegistroPrecio> = withContext(Dispatchers.IO) {
         runCatching { json.decodeFromString<List<RegistroPrecio>>(archivo.readText()) }.getOrDefault(emptyList())
     }
@@ -80,13 +98,21 @@ class AlmacenLocal(
         tmp.renameTo(archivo)
     }
 
-    private companion object {
-        const val CLAVE_MERCADO = "mercado"
-        const val CLAVE_LUGAR = "ultimo_lugar"
-        const val CLAVE_ESTILO = "estilo_color"
-        const val CLAVE_MODO = "modo_tema"
-        const val CLAVE_PLUS = "plus"
-        const val CLAVE_MANDADO = "mandado"
+    companion object {
+        private const val CLAVE_MERCADO = "mercado"
+        private const val CLAVE_LUGAR = "ultimo_lugar"
+        private const val CLAVE_ESTILO = "estilo_color"
+        private const val CLAVE_MODO = "modo_tema"
+        private const val CLAVE_PLUS = "plus"
+        private const val CLAVE_MANDADO = "mandado"
+        private const val CLAVE_SEGUIDOS = "seguidos"
+        private const val CLAVE_AVISOS = "avisos"
+        private const val CLAVE_SEMANA_AVISADA = "semana_avisada"
+
+        fun de(contexto: Context) = AlmacenLocal(
+            File(contexto.filesDir, "mis_precios.json"),
+            contexto.getSharedPreferences("preferencias", Context.MODE_PRIVATE),
+        )
     }
 }
 

@@ -1,5 +1,13 @@
 package mx.acomo.app.ui
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalContext
+import mx.acomo.app.AvisosPrecios
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -54,6 +62,11 @@ fun PantallaAjustes(
     estilo: EstiloColor,
     modo: ModoTema,
     plus: Boolean,
+    avisos: Boolean,
+    /** Productos seguidos: id -> nombre. */
+    seguidos: Map<String, String>,
+    onAvisos: (Boolean) -> Unit,
+    onDejarDeSeguir: (String) -> Unit,
     onEstilo: (EstiloColor) -> Unit,
     onModo: (ModoTema) -> Unit,
     onCambiarPlus: (Boolean) -> Unit,
@@ -136,11 +149,18 @@ fun PantallaAjustes(
                     }
             }
 
+            Titulo("Avisos de precios bajos")
+            SeccionAvisos(avisos, seguidos, onAvisos, onDejarDeSeguir)
+
             if (BuildConfig.DEBUG) {
                 Titulo("Pruebas (solo en versión de desarrollo)")
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Activar Plus de prueba", Modifier.weight(1f))
                     Switch(checked = plus, onCheckedChange = onCambiarPlus)
+                }
+                val ctx = LocalContext.current
+                androidx.compose.material3.OutlinedButton(onClick = { AvisosPrecios.probarAhora(ctx) }) {
+                    Text("Probar aviso ahora")
                 }
             }
 
@@ -184,4 +204,72 @@ private fun TarjetaPlus(plus: Boolean, onObtener: () -> Unit) {
 @Composable
 private fun Titulo(texto: String) {
     Text(texto, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+}
+
+@Composable
+private fun SeccionAvisos(
+    avisos: Boolean,
+    seguidos: Map<String, String>,
+    onAvisos: (Boolean) -> Unit,
+    onDejarDeSeguir: (String) -> Unit,
+) {
+    val contexto = LocalContext.current
+    var permiso by remember { mutableStateOf(AvisosPrecios.permisoConcedido(contexto)) }
+    // El aviso de "desactivadas" sale si ya estaba negado o después de que el usuario lo niega,
+    // no mientras el diálogo del sistema está abierto.
+    var mostrarNegado by remember { mutableStateOf(!permiso) }
+    val pedir = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        permiso = it
+        mostrarNegado = !it
+    }
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        shape = MaterialTheme.shapes.large,
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Avisarme cuando bajen")
+                    Text(
+                        "Se revisa cada semana, cuando salen precios nuevos.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = avisos,
+                    onCheckedChange = { activo ->
+                        onAvisos(activo)
+                        if (activo && !permiso && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            mostrarNegado = false
+                            pedir.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    },
+                )
+            }
+            if (avisos && !permiso && seguidos.isNotEmpty() && mostrarNegado) {
+                Text(
+                    "Las notificaciones están desactivadas en el teléfono.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            if (seguidos.isEmpty()) {
+                Text(
+                    "Aún no sigues ningún producto. Ábrelo y activa \"Avisarme cuando baje\".",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                seguidos.entries.sortedBy { it.value }.forEach { (id, nombre) ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("🔔 $nombre", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                        TextButton(onClick = { onDejarDeSeguir(id) }) { Text("Quitar") }
+                    }
+                }
+            }
+        }
+    }
 }

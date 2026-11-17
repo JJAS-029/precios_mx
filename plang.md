@@ -108,6 +108,13 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
 * **Plus, pago único** (sugerido $29–49 MXN, por definir): quita anuncios y desbloquea temas. Más adelante podría incluir funciones extra (avisos de precio, varias listas de mandado), pero las funciones de precios básicas siempre gratis.
 * AdMob paga poco por usuario en México; el ingreso real depende de volumen. Plus es el complemento.
 
+### ✔ Fase 3.11: Avisos de precios bajos
+* En el detalle: "🔔 Avisarme cuando baje" (pide el permiso de notificaciones en Android 13+).
+* WorkManager revisa cada 12 h (con internet) si hay semana nueva del mercado elegido; avisa una sola vez por semana.
+* Regla: bajó ≥10% contra la semana pasada, o está ≥10% bajo su promedio de 8 semanas **y** bajó ≥3% esa semana (para no repetir cada semana si se queda barato).
+* Una notificación agrupada; si es un solo producto, al tocarla abre su detalle.
+* Ajustes: interruptor general y lista de productos seguidos. En debug, botón "Probar aviso ahora".
+
 ### ⏳ Fase 4: Antes de publicar en Google Play
 * ✔ Cuenta de desarrollador de Google Play: ya existe.
 * 📝 **Testers (pendiente, se ve más adelante):** las cuentas personales nuevas deben hacer una prueba cerrada con al menos 12 testers durante 14 días antes de poder publicar en producción. Ir juntando correos de familiares y amigos con Android.
@@ -125,7 +132,7 @@ Ordenadas de más fácil a más trabajo:
 1. ~~Equivalencias / sustitutos~~ ✅ (Fase 3.9). Pendiente: ampliar la tabla con lo que digan los usuarios.
 2. ~~**Calculadora / carrito de presupuesto.**~~ ✅ (Fase 3.10, falta lo de piezas). El usuario arma su lista ("2 kg jitomate, 1 kg cebolla, 3 aguacates…") y ve el costo estimado al menudeo (mayoreo × factor), con total y semáforo por producto. Para piezas (aguacate, piña, lechuga) hace falta un peso promedio por pieza. Guardar listas frecuentes ("mandado de la semana").
 3. **Productos de temporada.** Con el historial de 52 semanas se calcula en qué meses cada producto suele estar más barato. Sección "De temporada este mes" y aviso del tipo "Empieza la temporada de mandarina".
-4. **Avisos de precios bajos.** El usuario marca productos favoritos y recibe una notificación cuando bajan cierto % o están abajo de su promedio. Se puede hacer local: WorkManager revisa los datos nuevos cada miércoles y lanza una notificación, sin servidor. Requiere permiso de notificaciones (Android 13+).
+4. ~~**Avisos de precios bajos.**~~ ✅ (Fase 3.11). El usuario marca productos favoritos y recibe una notificación cuando bajan cierto % o están abajo de su promedio. Se puede hacer local: WorkManager revisa los datos nuevos cada miércoles y lanza una notificación, sin servidor. Requiere permiso de notificaciones (Android 13+).
 5. **Huevo y pollo** (ver sección 3). Huevo primero, porque cubre los mismos mercados.
 6. **Reportes de usuarios** ("pagué $X en el tianguis de Y") para tener precio de menudeo real; aquí entraría Firebase.
 7. **Mapa de mercados.** Opcional; el buscador con ubicación ya resuelve la selección. Un mapa requiere el SDK de Google Maps (API key) u OpenStreetMap (osmdroid).

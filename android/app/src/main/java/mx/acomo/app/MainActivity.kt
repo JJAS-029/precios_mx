@@ -45,15 +45,17 @@ class MainActivity : ComponentActivity() {
                 val estilo = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { oscuro }
                 enableEdgeToEdge(statusBarStyle = estilo, navigationBarStyle = estilo)
             }
-            TemaAcomo(estilo = estado.estilo, modo = estado.modo, plus = estado.plus) { App(vm) }
+            TemaAcomo(estilo = estado.estilo, modo = estado.modo, plus = estado.plus) {
+                App(vm, productoInicial = intent.getStringExtra(AvisosPrecios.EXTRA_PRODUCTO))
+            }
         }
     }
 }
 
 @Composable
-private fun App(vm: PreciosViewModel) {
+private fun App(vm: PreciosViewModel, productoInicial: String?) {
     val estado by vm.estado.collectAsStateWithLifecycle()
-    var productoId by rememberSaveable { mutableStateOf<String?>(null) }
+    var productoId by rememberSaveable { mutableStateOf(productoInicial) }
     var misPrecios by rememberSaveable { mutableStateOf(false) }
     var elegirMercado by rememberSaveable { mutableStateOf(false) }
     var ajustes by rememberSaveable { mutableStateOf(false) }
@@ -96,6 +98,8 @@ private fun App(vm: PreciosViewModel) {
                 kgEnMandado = estado.mandado.find { it.productoId == producto.id }?.kg,
                 onPonerEnMandado = { kg -> vm.ponerEnMandado(producto, kg) },
                 onAbrirMandado = { productoId = null; mandado = true },
+                seguido = producto.id in estado.seguidos,
+                onSeguir = { vm.seguir(producto, it) },
                 onVolver = { productoId = null },
             )
         }
@@ -117,6 +121,10 @@ private fun App(vm: PreciosViewModel) {
                 estilo = estado.estilo,
                 modo = estado.modo,
                 plus = estado.plus,
+                avisos = estado.avisos,
+                seguidos = estado.seguidos,
+                onAvisos = vm::cambiarAvisos,
+                onDejarDeSeguir = vm::dejarDeSeguir,
                 onEstilo = vm::elegirEstilo,
                 onModo = vm::elegirModo,
                 onCambiarPlus = vm::cambiarPlus,

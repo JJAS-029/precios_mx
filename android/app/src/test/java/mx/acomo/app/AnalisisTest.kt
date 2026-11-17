@@ -22,6 +22,8 @@ import mx.acomo.app.data.menosKg
 import mx.acomo.app.data.presupuesto
 import mx.acomo.app.data.alternativas
 import mx.acomo.app.data.sugerenciasCambio
+import mx.acomo.app.data.bajadas
+import mx.acomo.app.data.textoAviso
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -91,6 +93,29 @@ class AnalisisTest {
         val limon5 = prod("Limón c/semilla # 5", 18.0, 15.0)
         val sinSemilla = prod("Limón s/semilla", 22.0, 20.0)
         assertEquals(listOf("Limón s/semilla"), alternativas(limon4, listOf(limon4, limon5, sinSemilla)).map { it.producto.nombre })
+    }
+
+    @Test fun avisosDeBajada() {
+        val jit = prod("Tomate Saladette", 30.0, 24.0)    // -20%
+        val cebolla = prod("Cebolla Blanca", 20.0, 19.0)  // -5%: no avisa
+        val papa = prod("Papa Alpha", 25.0, 20.0)         // -20%, pero no se sigue
+        // Barato contra su promedio pero sin bajar esta semana: ya se avisó antes, no repetir.
+        val limon = Producto("limon", "Limon", "Primera", "Frutas",
+            (39..44).map { PrecioSemana("2026-W$it", null, null, 30.0, 5) } +
+                listOf(PrecioSemana("2026-W45", null, null, 20.0, 5), PrecioSemana("2026-W46", null, null, 20.0, 5)))
+        val todos = listOf(jit, cebolla, papa, limon)
+        val seguidos = setOf(jit.id, cebolla.id, limon.id)
+
+        val b = bajadas(seguidos, todos, "2026-W46")
+        assertEquals(listOf(jit.id), b.map { it.producto.id })
+        assertEquals("-20% vs. la semana pasada", b[0].motivo)
+        // Una semana que no es la más reciente del producto: no avisar de precios viejos.
+        assertTrue(bajadas(seguidos, todos, "2026-W47").isEmpty())
+
+        val (titulo, lineas) = textoAviso(b, "Toluca")
+        assertEquals("Bajó jitomate saladette en Toluca", titulo)
+        assertEquals("Jitomate saladette: $24.00/kg (-20% vs. la semana pasada)", lineas.single())
+        assertEquals("Bajaron 2 de tus productos en Toluca", textoAviso(bajadas(setOf(jit.id, papa.id), todos, "2026-W46"), "Toluca").first)
     }
 
     @Test fun presupuestoDelMandado() {
