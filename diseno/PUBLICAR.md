@@ -16,20 +16,22 @@ gradlew assembleRelease   # -> APK firmado para probar en un teléfono
 ```
 Antes de cada versión nueva, subir `versionCode` (y `versionName`) en `app/build.gradle.kts`.
 
-## 3. AdMob
-1. En AdMob: Apps → Agregar app → Android → "¿Está publicada?" **No** → nombre "¿A cómo?".
-2. Crear un bloque **Banner** dentro de esa app.
-3. Poner los dos IDs en `android/gradle.properties` (`admob.appId` y `admob.banner`).
-   La versión de desarrollo sigue usando anuncios de prueba.
-4. Cuando esté publicada, vincularla con Play desde AdMob.
-5. `app-ads.txt`: debe estar en la **raíz** del sitio web que pongas en la ficha de Play
-   (p. ej. `https://tusitio.com/app-ads.txt`). Si ya lo tienes para tu otra app en ese mismo sitio,
-   ya queda cubierto; la línea es la misma porque es la misma cuenta.
+## 3. AdMob (ya está lista)
+* App "¿A cómo?" en la cuenta de AdMob, con su bloque Banner. Los IDs están en
+  `android/gradle.properties` (`admob.appId`, `admob.banner`); solo los usa la versión release,
+  la de desarrollo siempre muestra anuncios de prueba.
+* `app-ads.txt` ya está en `https://jjas-029.github.io/app-ads.txt` (misma cuenta que Lab Pomodoro).
+  En la ficha de Play hay que poner como **sitio web** `https://jjas-029.github.io/acomo/`
+  (mismo dominio, así AdMob encuentra el `app-ads.txt`).
+* Cuando esté publicada, vincularla con Play desde AdMob (Apps → Configuración de la app).
 
-## 4. Política de privacidad
-* Archivo: `docs/privacidad.html`. **Cambiar `CORREO_DE_CONTACTO`** por un correo de contacto.
-* Publicarla con GitHub Pages: repo → Settings → Pages → Branch `main`, carpeta `/docs`.
-  Queda en `https://jjas-029.github.io/precios_mx/privacidad.html`.
+## 4. Sitio y política de privacidad (ya publicadas)
+* Viven en el repo del sitio `JJAS-029/JJAS-029.github.io`, carpeta `acomo/`:
+  * Página: `https://jjas-029.github.io/acomo/`
+  * Aviso de privacidad: `https://jjas-029.github.io/acomo/privacidad.html`
+* Contacto: ciencia.koala@gmail.com. Si la app cambia lo que hace con datos, actualizar el aviso ahí.
+* Cuando salga en Play, cambiar en `acomo/index.html` el letrero "Muy pronto en Google Play" por el
+  enlace `https://play.google.com/store/apps/details?id=mx.acomo.app`.
 
 ## 5. Ficha de la tienda
 
