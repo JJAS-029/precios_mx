@@ -16,6 +16,7 @@ import mx.acomo.app.Compras
 import mx.acomo.app.EstadoCompra
 import mx.acomo.app.data.AlmacenLocal
 import mx.acomo.app.data.ArticuloMandado
+import mx.acomo.app.data.ListaGuardada
 import mx.acomo.app.data.DatosMercado
 import mx.acomo.app.data.Indice
 import mx.acomo.app.data.Mercado
@@ -44,6 +45,7 @@ data class EstadoUi(
     val modo: ModoTema = ModoTema.SISTEMA,
     val plus: Boolean = false,
     val mandado: List<ArticuloMandado> = emptyList(),
+    val listas: List<ListaGuardada> = emptyList(),
     /** Productos con aviso de bajada: id -> nombre. */
     val seguidos: Map<String, String> = emptyMap(),
     val avisos: Boolean = true,
@@ -70,6 +72,7 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
             modo = ModoTema.desde(almacen.modoTema),
             plus = almacen.plus,
             mandado = almacen.mandado,
+            listas = almacen.listas,
             seguidos = almacen.seguidos,
             avisos = almacen.avisos,
             avisosTemporada = almacen.avisosTemporada,
@@ -187,18 +190,40 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
 
     // ----- mandado
 
-    /** Agrega el producto o cambia su cantidad; con kg <= 0 lo quita. */
-    fun ponerEnMandado(producto: Producto, kg: Double) =
-        cambiarMandado { lista ->
-            val sin = lista.filterNot { it.productoId == producto.id }
-            if (kg <= 0.0) sin
-            else if (sin.size == lista.size) lista + ArticuloMandado(producto.id, producto.nombreVisible, kg)
-            else lista.map { if (it.productoId == producto.id) it.copy(kg = kg) else it }
+    /** Agrega el producto (por pieza si se suele comprar así) o lo reemplaza; con kg <= 0 lo quita. */
+    fun ponerEnMandado(producto: Producto, articulo: ArticuloMandado?) = cambiarMandado { lista ->
+        val sin = lista.filterNot { it.productoId == producto.id }
+        when {
+            articulo == null || articulo.kg <= 0.0 -> sin
+            sin.size == lista.size -> lista + articulo
+            else -> lista.map { if (it.productoId == producto.id) articulo else it }
         }
+    }
 
-    fun cambiarKg(productoId: String, kg: Double) = cambiarMandado { lista ->
-        if (kg <= 0.0) lista.filterNot { it.productoId == productoId }
-        else lista.map { if (it.productoId == productoId) it.copy(kg = kg) else it }
+    /** Cambia la cantidad de un artículo ya en la lista; con kg <= 0 lo quita. */
+    fun cambiarArticulo(articulo: ArticuloMandado) = cambiarMandado { lista ->
+        if (articulo.kg <= 0.0) lista.filterNot { it.productoId == articulo.productoId }
+        else lista.map { if (it.productoId == articulo.productoId) articulo else it }
+    }
+
+    // ----- listas guardadas
+
+    /** Guarda la lista actual con ese nombre (si ya existe, la reemplaza). */
+    fun guardarLista(nombre: String) {
+        val limpio = nombre.trim().ifBlank { "Mi lista" }
+        val nuevas = _estado.value.listas.filterNot { it.nombre.equals(limpio, ignoreCase = true) } +
+            ListaGuardada(limpio, _estado.value.mandado)
+        almacen.listas = nuevas
+        _estado.update { it.copy(listas = nuevas) }
+    }
+
+    /** Reemplaza el mandado actual por la lista guardada. */
+    fun cargarLista(lista: ListaGuardada) = cambiarMandado { lista.articulos }
+
+    fun borrarLista(nombre: String) {
+        val nuevas = _estado.value.listas.filterNot { it.nombre == nombre }
+        almacen.listas = nuevas
+        _estado.update { it.copy(listas = nuevas) }
     }
 
     fun vaciarMandado() = cambiarMandado { emptyList() }

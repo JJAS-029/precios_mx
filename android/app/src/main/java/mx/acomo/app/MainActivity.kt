@@ -96,8 +96,8 @@ private fun App(vm: PreciosViewModel, productoInicial: String?) {
                     alternativas(producto, estado.datosActuales?.productos.orEmpty())
                 },
                 onAbrirProducto = { productoId = it },
-                kgEnMandado = estado.mandado.find { it.productoId == producto.id }?.kg,
-                onPonerEnMandado = { kg -> vm.ponerEnMandado(producto, kg) },
+                enMandado = estado.mandado.find { it.productoId == producto.id },
+                onPonerEnMandado = { vm.ponerEnMandado(producto, it) },
                 onAbrirMandado = { productoId = null; mandado = true },
                 seguido = producto.id in estado.seguidos,
                 onSeguir = { vm.seguir(producto, it) },
@@ -113,9 +113,13 @@ private fun App(vm: PreciosViewModel, productoInicial: String?) {
                 articulos = estado.mandado,
                 productos = estado.datosActuales?.productos.orEmpty(),
                 mercado = mercado?.ciudad.orEmpty(),
-                onCambiarKg = vm::cambiarKg,
+                listas = estado.listas,
+                onCambiar = vm::cambiarArticulo,
                 onAbrirProducto = { productoId = it },
                 onVaciar = vm::vaciarMandado,
+                onGuardarLista = vm::guardarLista,
+                onCargarLista = vm::cargarLista,
+                onBorrarLista = vm::borrarLista,
                 onVolver = { mandado = false },
             )
         }

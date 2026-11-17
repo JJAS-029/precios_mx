@@ -98,6 +98,13 @@ class AlmacenLocal(
         get() = prefs.getString(CLAVE_SEMANA_AVISADA, "").orEmpty()
         set(v) = prefs.edit().putString(CLAVE_SEMANA_AVISADA, v).apply()
 
+    /** Listas del mandado guardadas con nombre. */
+    var listas: List<ListaGuardada>
+        get() = runCatching {
+            json.decodeFromString<List<ListaGuardada>>(prefs.getString(CLAVE_LISTAS, null) ?: "[]")
+        }.getOrDefault(emptyList())
+        set(v) = prefs.edit().putString(CLAVE_LISTAS, json.encodeToString(v)).apply()
+
     suspend fun registros(): List<RegistroPrecio> = withContext(Dispatchers.IO) {
         runCatching { json.decodeFromString<List<RegistroPrecio>>(archivo.readText()) }.getOrDefault(emptyList())
     }
@@ -115,6 +122,7 @@ class AlmacenLocal(
         private const val CLAVE_MODO = "modo_tema"
         private const val CLAVE_PLUS = "plus"
         private const val CLAVE_MANDADO = "mandado"
+        private const val CLAVE_LISTAS = "listas"
         private const val CLAVE_SEGUIDOS = "seguidos"
         private const val CLAVE_AVISOS = "avisos"
         private const val CLAVE_AVISOS_TEMPORADA = "avisos_temporada"

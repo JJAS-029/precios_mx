@@ -20,6 +20,8 @@ import mx.acomo.app.data.mandadoTexto
 import mx.acomo.app.data.masKg
 import mx.acomo.app.data.menosKg
 import mx.acomo.app.data.presupuesto
+import mx.acomo.app.data.pesoPieza
+import mx.acomo.app.data.articuloPorPiezas
 import mx.acomo.app.data.alternativas
 import mx.acomo.app.data.sugerenciasCambio
 import mx.acomo.app.data.bajadas
@@ -203,6 +205,17 @@ class AnalisisTest {
         assertEquals(2.5, masKg(2.0), 0.0)
         assertEquals(1.75, menosKg(2.0), 0.0)
         assertTrue(mandadoTexto(p, "Toluca").contains("Total aproximado: $164"))
+
+        // Por pieza: 3 aguacates ≈ 600 g; el total se calcula con los kg.
+        assertEquals(0.2, pesoPieza("Aguacate Hass")!!, 0.0)
+        assertEquals(1.5, pesoPieza("Piña Chica")!!, 0.0)
+        assertEquals(null, pesoPieza("Tomate Saladette"))
+        val tres = articuloPorPiezas(aguacate.id, "Aguacate Hass", 3, 0.2)
+        assertEquals(0.6, tres.kg, 0.0001)
+        assertEquals("3 piezas", cantidad(tres))
+        val p2 = presupuesto(listOf(tres), listOf(aguacate))
+        assertEquals(24.0, p2.totalMayoreo, 0.001)   // 0.6 × 40
+        assertTrue(mandadoTexto(p2, "Toluca").contains("• 3 piezas Aguacate Hass (≈ 600 g)"))
     }
 
     @Test fun resumenPorMercado() {

@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.remember
 import mx.acomo.app.AvisosPrecios
+import mx.acomo.app.data.ArticuloMandado
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -73,9 +74,10 @@ fun PantallaDetalle(
     /** Sustitutos en el mismo mercado (ver [mx.acomo.app.data.alternativas]). */
     alternativas: List<Alternativa>,
     onAbrirProducto: (String) -> Unit,
-    /** Kilos de este producto en el mandado (null si no está). */
-    kgEnMandado: Double?,
-    onPonerEnMandado: (kg: Double) -> Unit,
+    /** Este producto en el mandado (null si no está). */
+    enMandado: ArticuloMandado?,
+    /** null o kg <= 0 lo quita. */
+    onPonerEnMandado: (ArticuloMandado?) -> Unit,
     onAbrirMandado: () -> Unit,
     /** ¿Tiene aviso de bajada? */
     seguido: Boolean,
@@ -162,7 +164,7 @@ fun PantallaDetalle(
             }
 
             // ----- mandado
-            TarjetaMandado(producto, kgEnMandado, onPonerEnMandado, onAbrirMandado)
+            TarjetaMandado(producto, enMandado, onPonerEnMandado, onAbrirMandado)
 
             // ----- aviso de bajada
             TarjetaAviso(seguido, onSeguir)
@@ -307,12 +309,12 @@ internal fun Tarjeta(destacada: Boolean = false, content: @Composable () -> Unit
 @Composable
 private fun TarjetaMandado(
     producto: Producto,
-    kg: Double?,
-    onPoner: (Double) -> Unit,
+    articulo: ArticuloMandado?,
+    onPoner: (ArticuloMandado?) -> Unit,
     onAbrirMandado: () -> Unit,
 ) {
     Tarjeta {
-        if (kg == null) {
+        if (articulo == null) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("¿Lo vas a comprar?", style = MaterialTheme.typography.titleSmall)
@@ -323,7 +325,7 @@ private fun TarjetaMandado(
                     )
                 }
                 androidx.compose.material3.FilledTonalButton(
-                    onClick = { onPoner(1.0) },
+                    onClick = { onPoner(articuloNuevo(producto)) },
                     shapes = ButtonDefaults.shapes(),
                 ) { Text("🛒 Agregar") }
             }
@@ -336,7 +338,7 @@ private fun TarjetaMandado(
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
                     ) { Text("Ver mandado →") }
                 }
-                SelectorKg(kg) { onPoner(if (it < 0.25) 0.0 else it) }
+                SelectorCantidad(articulo, onPoner)
             }
         }
     }
