@@ -82,7 +82,12 @@ Antes de cada versión nueva, subir `versionCode` (y `versionName`) en `app/buil
   * *Identificadores del dispositivo* (ID de publicidad): recopilado y compartido, para **publicidad**
     y **estadísticas**, no opcional en la versión gratuita.
   * *Información y rendimiento de la app* (diagnósticos/fallas de AdMob): recopilado, estadísticas.
-  * *Ubicación aproximada*: **no** se recopila (se usa solo en el teléfono, no sale de él).
+  * *Ubicación aproximada*: **sí**, recopilada y compartida, por AdMob (la estima con la dirección IP).
+    La ubicación que usa la app para ordenar mercados no sale del teléfono y no cuenta.
+  * *Actividad en apps → Interacciones con la app* (toques y vistas de anuncios): recopilado y compartido.
+  * En los cuatro tipos (ubicación aproximada, interacciones, fallas/diagnóstico e IDs): no efímero,
+    obligatorio, finalidades Publicidad, Estadísticas y Prevención de fraudes.
+  * Cuentas: "Mi app no permite que los usuarios creen cuentas".
   * Los productos seguidos para avisos se quedan en el teléfono: no cuentan como datos recopilados.
   * Datos cifrados en tránsito: **Sí**. Opción para borrar datos: no aplica (no hay cuenta).
 * **Países:** empezar solo con **México** (evita el formulario de consentimiento europeo, GDPR).
