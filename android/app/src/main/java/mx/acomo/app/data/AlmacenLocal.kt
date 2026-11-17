@@ -83,6 +83,16 @@ class AlmacenLocal(
         get() = prefs.getBoolean(CLAVE_AVISOS, true)
         set(v) = prefs.edit().putBoolean(CLAVE_AVISOS, v).apply()
 
+    /** Aviso mensual "Empieza la temporada de …". */
+    var avisosTemporada: Boolean
+        get() = prefs.getBoolean(CLAVE_AVISOS_TEMPORADA, true)
+        set(v) = prefs.edit().putBoolean(CLAVE_AVISOS_TEMPORADA, v).apply()
+
+    /** Último mes ("AAAA-MM") ya revisado para el aviso de temporada. */
+    var mesTemporada: String
+        get() = prefs.getString(CLAVE_MES_TEMPORADA, "").orEmpty()
+        set(v) = prefs.edit().putString(CLAVE_MES_TEMPORADA, v).apply()
+
     /** Última semana ISO ya revisada para avisos, para no avisar dos veces de la misma. */
     var semanaAvisada: String
         get() = prefs.getString(CLAVE_SEMANA_AVISADA, "").orEmpty()
@@ -107,6 +117,8 @@ class AlmacenLocal(
         private const val CLAVE_MANDADO = "mandado"
         private const val CLAVE_SEGUIDOS = "seguidos"
         private const val CLAVE_AVISOS = "avisos"
+        private const val CLAVE_AVISOS_TEMPORADA = "avisos_temporada"
+        private const val CLAVE_MES_TEMPORADA = "mes_temporada"
         private const val CLAVE_SEMANA_AVISADA = "semana_avisada"
 
         fun de(contexto: Context) = AlmacenLocal(

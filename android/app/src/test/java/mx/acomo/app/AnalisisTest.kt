@@ -27,6 +27,8 @@ import mx.acomo.app.data.Temporada
 import mx.acomo.app.data.rangoMeses
 import mx.acomo.app.data.mesesBaratos
 import mx.acomo.app.data.deTemporada
+import mx.acomo.app.data.empiezan
+import mx.acomo.app.data.textoTemporada
 import mx.acomo.app.data.preciosPorEstado
 import mx.acomo.app.data.NivelPrecio
 import mx.acomo.app.data.MapaEstados
@@ -122,6 +124,12 @@ class AnalisisTest {
         val j = prod("Tomate Saladette", 30.0, 30.0)
         assertEquals(listOf(m.id), tem.deTemporada(listOf(m, j), mes = 11).map { it.first.id })
         assertTrue(tem.deTemporada(listOf(m, j), mes = 5).isEmpty())
+        // Empieza en noviembre (oct 0.97 -> nov 0.90); en diciembre ya venía de temporada.
+        assertEquals(listOf(m.id), tem.empiezan(listOf(m, j), mes = 10).map { it.first.id })
+        assertTrue(tem.empiezan(listOf(m, j), mes = 11).isEmpty())
+        val (titulo, lineas) = textoTemporada(tem.empiezan(listOf(m, j), mes = 10), tem)
+        assertEquals("Empieza la temporada de mandarina", titulo)
+        assertEquals("Mandarina: suele bajar 10% (temporada: nov–feb)", lineas.single())
     }
 
     @Test fun mapaPorEstado() {

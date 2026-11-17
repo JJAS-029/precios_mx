@@ -73,6 +73,9 @@ fun PantallaAjustes(
     seguidos: Map<String, String>,
     onAvisos: (Boolean) -> Unit,
     onDejarDeSeguir: (String) -> Unit,
+    avisosTemporada: Boolean,
+    onAvisosTemporada: (Boolean) -> Unit,
+    onPermiso: () -> Unit,
     onEstilo: (EstiloColor) -> Unit,
     onModo: (ModoTema) -> Unit,
     onCambiarPlus: (Boolean) -> Unit,
@@ -159,7 +162,7 @@ fun PantallaAjustes(
             }
 
             Titulo("Avisos de precios bajos")
-            SeccionAvisos(avisos, seguidos, onAvisos, onDejarDeSeguir)
+            SeccionAvisos(avisos, seguidos, onAvisos, onDejarDeSeguir, avisosTemporada, onAvisosTemporada, onPermiso)
 
             if (BuildConfig.DEBUG) {
                 Titulo("Pruebas (solo en versión de desarrollo)")
@@ -170,6 +173,9 @@ fun PantallaAjustes(
                 val ctx = LocalContext.current
                 androidx.compose.material3.OutlinedButton(onClick = { AvisosPrecios.probarAhora(ctx) }) {
                     Text("Probar aviso ahora")
+                }
+                androidx.compose.material3.OutlinedButton(onClick = { AvisosPrecios.probarTemporada(ctx) }) {
+                    Text("Probar aviso de temporada")
                 }
             }
 
@@ -234,6 +240,9 @@ private fun SeccionAvisos(
     seguidos: Map<String, String>,
     onAvisos: (Boolean) -> Unit,
     onDejarDeSeguir: (String) -> Unit,
+    avisosTemporada: Boolean,
+    onAvisosTemporada: (Boolean) -> Unit,
+    onPermiso: () -> Unit,
 ) {
     val contexto = LocalContext.current
     var permiso by remember { mutableStateOf(AvisosPrecios.permisoConcedido(contexto)) }
@@ -243,6 +252,7 @@ private fun SeccionAvisos(
     val pedir = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         permiso = it
         mostrarNegado = !it
+        onPermiso()
     }
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
@@ -269,7 +279,27 @@ private fun SeccionAvisos(
                     },
                 )
             }
-            if (avisos && !permiso && seguidos.isNotEmpty() && mostrarNegado) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 12.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Text("Avisarme cuando empiece una temporada")
+                    Text(
+                        "Por ejemplo: \"Empieza la temporada de mandarina\". Un aviso al mes como máximo.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = avisosTemporada,
+                    onCheckedChange = { activo ->
+                        onAvisosTemporada(activo)
+                        if (activo && !permiso && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            mostrarNegado = false
+                            pedir.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    },
+                )
+            }
+            if ((avisos && seguidos.isNotEmpty() || avisosTemporada) && !permiso && mostrarNegado) {
                 Text(
                     "Las notificaciones están desactivadas en el teléfono.",
                     style = MaterialTheme.typography.bodySmall,

@@ -2,6 +2,7 @@ package mx.acomo.app.data
 
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
+import kotlin.math.roundToInt
 
 /**
  * data/temporada.json (recolector/temporada.py): por producto, 12 índices (enero..diciembre).
@@ -70,3 +71,38 @@ fun Temporada.deTemporada(productos: List<Producto>, mes: Int = mesActual(), max
         .sortedBy { it.second }
         .take(max)
         .toList()
+
+/**
+ * Productos del mercado que EMPIEZAN temporada en [mes]: ese mes suelen estar baratos y el anterior no.
+ * Una entrada por producto (la variedad que más baja).
+ */
+fun Temporada.empiezan(productos: List<Producto>, mes: Int = mesActual()): List<Pair<Producto, Double>> {
+    val anterior = (mes + 11) % 12
+    return productos.asSequence()
+        .filter { it.resumen() != null }
+        .mapNotNull { p ->
+            val i = indice(p.id) ?: return@mapNotNull null
+            val ahora = i[mes] ?: return@mapNotNull null
+            if (ahora <= UMBRAL_TEMPORADA && (i[anterior] ?: 1.0) > UMBRAL_TEMPORADA) p to ahora else null
+        }
+        .groupBy { normalizar(it.first.nombre).substringBefore(' ') }.values.map { v -> v.minBy { it.second } }
+        .sortedBy { it.second }
+        .toList()
+}
+
+/** Título y líneas del aviso de temporada (máximo 3 productos). */
+fun textoTemporada(empiezan: List<Pair<Producto, Double>>, temporada: Temporada): Pair<String, List<String>> {
+    val tres = empiezan.take(3)
+    // Primera palabra del nombre como se dice ("plátano", "jitomate"), sin la variedad.
+    val nombres = tres.map { it.first.nombreVisible.lowercase().substringBefore(' ') }
+    val titulo = "Empieza la temporada de " + when (nombres.size) {
+        1 -> nombres[0]
+        else -> nombres.dropLast(1).joinToString(", ") + " y " + nombres.last()
+    }
+    val lineas = tres.map { (p, indice) ->
+        val baja = kotlin.math.abs(((indice - 1) * 100).roundToInt())
+        val meses = temporada.indice(p.id)?.let { rangoMeses(mesesBaratos(it)) }.orEmpty()
+        "${p.nombreVisible}: suele bajar $baja% (temporada: $meses)"
+    }
+    return titulo to lineas
+}

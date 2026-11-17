@@ -47,6 +47,7 @@ data class EstadoUi(
     /** Productos con aviso de bajada: id -> nombre. */
     val seguidos: Map<String, String> = emptyMap(),
     val avisos: Boolean = true,
+    val avisosTemporada: Boolean = true,
     /** Índice de temporada por producto (varios años de historia). */
     val temporada: Temporada? = null,
 ) {
@@ -71,6 +72,7 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
             mandado = almacen.mandado,
             seguidos = almacen.seguidos,
             avisos = almacen.avisos,
+            avisosTemporada = almacen.avisosTemporada,
         ),
     )
     val estado: StateFlow<EstadoUi> = _estado.asStateFlow()
@@ -228,6 +230,15 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
         _estado.update { it.copy(seguidos = nuevos) }
         AvisosPrecios.programar(getApplication())
     }
+
+    fun cambiarAvisosTemporada(activo: Boolean) {
+        almacen.avisosTemporada = activo
+        _estado.update { it.copy(avisosTemporada = activo) }
+        AvisosPrecios.programar(getApplication())
+    }
+
+    /** Después de conceder el permiso de notificaciones: el aviso de temporada ya puede programarse. */
+    fun permisoNotificacionesCambio() = AvisosPrecios.programar(getApplication())
 
     fun cambiarAvisos(activo: Boolean) {
         almacen.avisos = activo
