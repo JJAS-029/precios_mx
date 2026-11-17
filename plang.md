@@ -115,6 +115,15 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
 * Una notificación agrupada; si es un solo producto, al tocarla abre su detalle.
 * Ajustes: interruptor general y lista de productos seguidos. En debug, botón "Probar aviso ahora".
 
+### ✔ Fase 3.12: Mapa de precios por estado
+* En el detalle de cada producto, tarjeta "En el país": mapa de coropletas de los 32 estados.
+* Color = precio del estado contra el típico del país (mediana de las centrales): 5 niveles en escala
+  divergente azul (más barato) – gris – rojo (más caro), ColorBrewer RdBu, apta para daltonismo.
+  Estados con varias centrales: promedio. Sin dato: solo contorno.
+* Por municipio no: el SNIIM solo publica ~45 centrales (una o dos por estado).
+* Tocar un estado muestra su precio y sus mercados; "Ver todos los estados" da la lista ordenada (no depende del color).
+* Geometría: Natural Earth 1:10m (dominio público), simplificada con `diseno/generar_mapa.py` → `assets/estados.json` (42 KB).
+
 ### ⏳ Fase 4: Antes de publicar en Google Play
 * ✔ Cuenta de desarrollador de Google Play: ya existe.
 * 📝 **Testers (pendiente, se ve más adelante):** las cuentas personales nuevas deben hacer una prueba cerrada con al menos 12 testers durante 14 días antes de poder publicar en producción. Ir juntando correos de familiares y amigos con Android.
@@ -135,7 +144,7 @@ Ordenadas de más fácil a más trabajo:
 4. ~~**Avisos de precios bajos.**~~ ✅ (Fase 3.11). El usuario marca productos favoritos y recibe una notificación cuando bajan cierto % o están abajo de su promedio. Se puede hacer local: WorkManager revisa los datos nuevos cada miércoles y lanza una notificación, sin servidor. Requiere permiso de notificaciones (Android 13+).
 5. **Huevo y pollo** (ver sección 3). Huevo primero, porque cubre los mismos mercados.
 6. **Reportes de usuarios** ("pagué $X en el tianguis de Y") para tener precio de menudeo real; aquí entraría Firebase.
-7. **Mapa de mercados.** Opcional; el buscador con ubicación ya resuelve la selección. Un mapa requiere el SDK de Google Maps (API key) u OpenStreetMap (osmdroid).
+7. ~~**Mapa**~~ ✅ (Fase 3.12, mapa de precios por estado). **Mapa de mercados.** Opcional; el buscador con ubicación ya resuelve la selección. Un mapa requiere el SDK de Google Maps (API key) u OpenStreetMap (osmdroid).
 8. Datos abiertos de PROFECO (Quién es Quién en los Precios) para calibrar el factor de menudeo.
 
 ## 6. Pendientes y decisiones abiertas

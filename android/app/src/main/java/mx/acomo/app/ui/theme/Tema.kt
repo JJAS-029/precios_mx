@@ -83,7 +83,7 @@ val ColorBaja: Color
 /** Si el tema activo es oscuro (sirve también cuando el usuario forzó claro u oscuro). */
 @Composable
 @ReadOnlyComposable
-private fun fondoOscuro(): Boolean = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+internal fun fondoOscuro(): Boolean = MaterialTheme.colorScheme.surface.luminance() < 0.5f
 
 /** Paletas de color. Solo [VERDE] es gratuita; las demás son parte de ¿A cómo? Plus. */
 enum class EstiloColor(val nombre: String, val muestra: Color, val plus: Boolean) {

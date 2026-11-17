@@ -23,6 +23,11 @@ import mx.acomo.app.data.presupuesto
 import mx.acomo.app.data.alternativas
 import mx.acomo.app.data.sugerenciasCambio
 import mx.acomo.app.data.bajadas
+import mx.acomo.app.data.preciosPorEstado
+import mx.acomo.app.data.NivelPrecio
+import mx.acomo.app.data.MapaEstados
+import mx.acomo.app.data.EstadoMapa
+import mx.acomo.app.data.estadoEn
 import mx.acomo.app.data.textoAviso
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -93,6 +98,33 @@ class AnalisisTest {
         val limon5 = prod("Limón c/semilla # 5", 18.0, 15.0)
         val sinSemilla = prod("Limón s/semilla", 22.0, 20.0)
         assertEquals(listOf("Limón s/semilla"), alternativas(limon4, listOf(limon4, limon5, sinSemilla)).map { it.producto.nombre })
+    }
+
+    @Test fun mapaPorEstado() {
+        fun m(id: String, estado: String) = Mercado(id, "Central", id, estado, 0.0, 0.0)
+        val indice = Indice(
+            version = 1, generado = "",
+            mercados = listOf(m("a", "Jalisco"), m("b", "Jalisco"), m("c", "Puebla"), m("d", "Sonora")),
+            ultimos = mapOf("aguacate" to mapOf("a" to 30.0, "b" to 40.0, "c" to 36.0, "d" to 50.0)),
+        )
+        val pais = indice.preciosPorEstado("aguacate")!!
+        assertEquals(38.0, pais.tipico, 0.001)                       // mediana de 30, 36, 40, 50
+        assertEquals(35.0, pais.estados.getValue("Jalisco").precio, 0.001)  // promedio de sus 2 centrales
+        assertEquals(NivelPrecio.BARATO, pais.nivel(pais.estados.getValue("Jalisco")))   // -7.9%
+        assertEquals(NivelPrecio.BARATO, pais.nivel(pais.estados.getValue("Puebla")))    // -5.3%: ya cuenta como barato
+        assertEquals(NivelPrecio.NORMAL, NivelPrecio.de(4.9))
+        assertEquals(NivelPrecio.MUY_CARO, pais.nivel(pais.estados.getValue("Sonora")))  // +31.6%
+        assertEquals("Sonora", pais.masCaro?.estado)
+        // Con menos de 3 mercados no hay mapa.
+        assertEquals(null, indice.copy(ultimos = mapOf("x" to mapOf("a" to 1.0, "c" to 2.0))).preciosPorEstado("x"))
+
+        val mapa = MapaEstados(1f, 1f, listOf(
+            EstadoMapa("Izquierda", listOf(listOf(0f, 0f, 0.5f, 0f, 0.5f, 1f, 0f, 1f))),
+            EstadoMapa("Derecha", listOf(listOf(0.5f, 0f, 1f, 0f, 1f, 1f, 0.5f, 1f))),
+        ))
+        assertEquals("Izquierda", mapa.estadoEn(0.2f, 0.5f))
+        assertEquals("Derecha", mapa.estadoEn(0.8f, 0.5f))
+        assertEquals(null, mapa.estadoEn(3f, 3f))
     }
 
     @Test fun avisosDeBajada() {

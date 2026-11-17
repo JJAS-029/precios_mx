@@ -174,6 +174,9 @@ fun PantallaDetalle(
                 GraficaPrecios(producto.serie().takeLast(SEMANAS_GRAFICA), Modifier.padding(top = 8.dp))
             }
 
+            // ----- mapa por estado
+            TarjetaMapa(indice, producto.id, mercado)
+
             // ----- comparación entre mercados
             Tarjeta {
                 Text("En mercados cercanos", style = MaterialTheme.typography.titleSmall)
@@ -285,7 +288,7 @@ private fun TarjetaSemaforo(
 }
 
 @Composable
-private fun Tarjeta(destacada: Boolean = false, content: @Composable () -> Unit) {
+internal fun Tarjeta(destacada: Boolean = false, content: @Composable () -> Unit) {
     Card(
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
