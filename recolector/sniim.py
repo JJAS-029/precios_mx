@@ -7,10 +7,19 @@ centrales de abasto de recolector/mercados.json y genera:
   data/indice.json          lista de mercados, catálogo de productos y último
                             precio de cada producto en cada mercado
 
+Fuentes:
+  * frutas: frutas, hortalizas y chiles (diario).
+  * huevo:  huevo blanco y rojo, de la sección pecuaria del SNIIM (semanal, mismos ids de mercado).
+  * pollo:  pollo entero, pechuga y pierna/muslo de los centros de distribución de pollo (diario). Solo hay
+            6 regiones; cada central de abasto a menos de RADIO_POLLO_KM de una región toma sus precios
+            como referencia (calidad "Ref. <región>").
+
 Uso:
     python recolector/sniim.py                        # últimas 3 semanas (uso semanal)
     python recolector/sniim.py --desde 2025-11-03     # carga histórica
     python recolector/sniim.py --mercados 150 151     # solo algunos mercados
+    python recolector/sniim.py --desde 2025-11-17 --fuentes huevo   # solo el historial de huevo
+    python recolector/sniim.py --desde 2025-11-17 --fuentes pollo   # solo el historial de pollo
 """
 
 from __future__ import annotations
@@ -38,6 +47,21 @@ URL_RESULTADOS = (
     "http://www.economia-sniim.gob.mx/nuevo/Consultas/MercadosNacionales/"
     "PreciosDeMercado/Agricolas/ResultadosConsultaFechaFrutasYHortalizas.aspx"
 )
+
+URL_HUEVO = "http://www.economia-sniim.gob.mx/SNIIM-Pecuarios-Nacionales/e_Hue.asp"
+URL_POLLO_ENTERO = "http://www.economia-sniim.gob.mx/SNIIM-Pecuarios-Nacionales/e_Ent.asp"
+URL_POLLO_PIEZAS = "http://www.economia-sniim.gob.mx/SNIIM-Pecuarios-Nacionales/e_Pza.asp"
+
+# Regiones con precios de pollo: prefijo del encabezado del SNIIM -> (nombre, lat, lon).
+REGIONES_POLLO = {
+    "D.F.": ("Ciudad de México", 19.43, -99.13),
+    "Qro.": ("Querétaro", 20.59, -100.39),
+    "Dgo.": ("Durango", 24.02, -104.66),
+    "Nay": ("Nayarit", 21.50, -104.89),
+    "Zac": ("Zacatecas", 22.77, -102.58),
+    "B.C.S": ("La Paz", 24.14, -110.31),
+}
+RADIO_POLLO_KM = 200
 
 TAMANO_BLOQUE_DIAS = 31      # días por petición en cargas históricas
 SEMANAS_GUARDADAS = 52
@@ -73,7 +97,7 @@ def descargar(mercado_id: str, inicio: date, fin: date, sesion: requests.Session
 
 def _num(texto: str) -> float | None:
     try:
-        return float(texto.replace(",", "").strip())
+        return float(texto.replace("$", "").replace(",", "").strip())
     except ValueError:
         return None
 
@@ -120,6 +144,127 @@ def parsear(html: bytes) -> list[dict]:
     return filas
 
 
+def descargar_huevo(mercado_id: str, inicio: date, fin: date, sesion: requests.Session) -> list[dict]:
+    """Huevo blanco y rojo (sección pecuaria, una consulta por mes), en el mismo formato que parsear()."""
+    filas: list[dict] = []
+    mes = date(inicio.year, inicio.month, 1)
+    while mes <= fin:
+        params = {"prod": "0", "destino": mercado_id, "sem": "0", "mes": str(mes.month), "anio": str(mes.year)}
+        html = None
+        for intento in range(3):
+            try:
+                r = sesion.get(URL_HUEVO, params=params, timeout=60)
+                r.raise_for_status()
+                html = r.content.decode("latin-1")
+                break
+            except requests.RequestException as e:
+                print(f"  aviso huevo: intento {intento + 1} falló ({e})", file=sys.stderr)
+                time.sleep(5 * (intento + 1))
+        if html is not None:
+            for tr in BeautifulSoup(html, "html.parser").find_all("tr"):
+                c = [x.get_text(" ", strip=True) for x in tr.find_all("td")]
+                # Fecha | Producto | Presentación | Frecuente | Mínimo | Máximo
+                if len(c) != 6 or not re.fullmatch(r"\d{2}/\d{2}/\d{4}", c[0]):
+                    continue
+                fecha = datetime.strptime(c[0], "%d/%m/%Y").date()
+                frec = _num(c[3])
+                if not (inicio <= fecha <= fin) or frec is None or frec <= 0:
+                    continue
+                filas.append({
+                    "fecha": fecha, "categoria": "Huevo", "producto": c[1], "calidad": "",
+                    "min": _num(c[4]), "max": _num(c[5]), "frec": frec,
+                })
+        mes = date(mes.year + (mes.month == 12), mes.month % 12 + 1, 1)
+        time.sleep(0.5)
+    return filas
+
+
+def _meses(inicio: date, fin: date):
+    """(año, mes, día inicial, día final) de cada mes entre dos fechas."""
+    mes = date(inicio.year, inicio.month, 1)
+    while mes <= fin:
+        siguiente = date(mes.year + (mes.month == 12), mes.month % 12 + 1, 1)
+        ultimo = min(siguiente - timedelta(days=1), fin)
+        yield mes.year, mes.month, max(mes, inicio).day, ultimo.day
+        mes = siguiente
+
+
+def _pagina_pecuaria(url: str, params: dict, sesion: requests.Session) -> BeautifulSoup | None:
+    for intento in range(3):
+        try:
+            r = sesion.get(url, params=params, timeout=90)
+            r.raise_for_status()
+            return BeautifulSoup(r.content.decode("latin-1"), "html.parser")
+        except requests.RequestException as e:
+            print(f"  aviso pollo: intento {intento + 1} falló ({e})", file=sys.stderr)
+            time.sleep(5 * (intento + 1))
+    return None
+
+
+def _region(celdas: list[str]) -> str | None:
+    """Si la fila es el encabezado de un destino ("D.F. : Centro de distribución Becerra"), su región."""
+    if len(celdas) != 1:
+        return None
+    for prefijo, (nombre, _, _) in REGIONES_POLLO.items():
+        if celdas[0].startswith(prefijo):
+            return nombre
+    return None
+
+
+def descargar_pollo(inicio: date, fin: date, sesion: requests.Session) -> dict[str, list[dict]]:
+    """{región: filas} de pollo entero (mediana de marcas por día), pechuga y pierna/muslo."""
+    entero: dict[tuple[str, date], list[float]] = defaultdict(list)
+    filas: dict[str, list[dict]] = defaultdict(list)
+    for anio, mes, d1, d2 in _meses(inicio, fin):
+        comunes = {"del": f"{d1:02d}", "al": f"{d2:02d}", "mes": str(mes), "anio": str(anio), "RegPag": "5000"}
+        # Pollo entero: una fila por marca y día.
+        soup = _pagina_pecuaria(URL_POLLO_ENTERO, {"prod": "P01", "origen": "0", "destino": "0", **comunes}, sesion)
+        region = None
+        for tr in soup.find_all("tr") if soup else []:
+            c = [x.get_text(" ", strip=True) for x in tr.find_all("td")]
+            region = _region(c) or region
+            # Fecha | Producto | Marca | Origen | Peso en pie | Peso en canal | Precio
+            if region and len(c) == 7 and c[1] == "Pollo entero" and re.fullmatch(r"\d{2}/\d{2}/\d{4}", c[0]):
+                precio = _num(c[6])
+                if precio:
+                    entero[(region, datetime.strptime(c[0], "%d/%m/%Y").date())].append(precio)
+        # Piezas: una fila por día con mín/máx/frec de pechuga, pierna/muslo, retazo y vísceras.
+        soup = _pagina_pecuaria(URL_POLLO_PIEZAS, {"destino": "0", **comunes}, sesion)
+        region = None
+        for tr in soup.find_all("tr") if soup else []:
+            c = [x.get_text(" ", strip=True) for x in tr.find_all("td")]
+            region = _region(c) or region
+            if region and len(c) == 13 and re.fullmatch(r"\d{2}/\d{2}/\d{4}", c[0]):
+                fecha = datetime.strptime(c[0], "%d/%m/%Y").date()
+                for nombre, i in (("Pechuga de pollo", 1), ("Pierna y muslo de pollo", 4)):
+                    frec = _num(c[i + 2])
+                    if frec:
+                        filas[region].append({"fecha": fecha, "producto": nombre, "min": _num(c[i]),
+                                              "max": _num(c[i + 1]), "frec": frec})
+        time.sleep(1)
+    for (region, fecha), precios in entero.items():
+        filas[region].append({"fecha": fecha, "producto": "Pollo entero", "min": min(precios),
+                              "max": max(precios), "frec": statistics.median(precios)})
+    for region, fs in filas.items():
+        for f in fs:
+            f.update({"categoria": "Pollo", "calidad": f"Ref. {region}", "id": slug(f["producto"])})
+    return filas
+
+
+def region_pollo(mercado: dict) -> str | None:
+    """Región de pollo más cercana a la central, si está a menos de RADIO_POLLO_KM."""
+    import math
+
+    def km(lat1, lon1, lat2, lon2):
+        p1, p2 = math.radians(lat1), math.radians(lat2)
+        a = math.sin((p2 - p1) / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(math.radians(lon2 - lon1) / 2) ** 2
+        return 2 * 6371 * math.asin(math.sqrt(a))
+
+    distancias = [(km(mercado["lat"], mercado["lon"], lat, lon), nombre) for nombre, lat, lon in REGIONES_POLLO.values()]
+    d, nombre = min(distancias)
+    return nombre if d <= RADIO_POLLO_KM else None
+
+
 # ---------------------------------------------------------------- agregados
 
 def slug(texto: str) -> str:
@@ -141,7 +286,7 @@ def agregar_semanas(filas: list[dict]) -> tuple[dict, dict]:
     grupos: dict[tuple[str, str], list[dict]] = defaultdict(list)
     info: dict[str, dict] = {}
     for f in filas:
-        pid = slug(f"{f['producto']} {f['calidad']}")
+        pid = f.get("id") or slug(f"{f['producto']} {f['calidad']}")
         info[pid] = {"id": pid, "nombre": f["producto"], "calidad": f["calidad"], "categoria": f["categoria"]}
         grupos[(pid, semana_iso(f["fecha"]))].append(f)
 
@@ -209,7 +354,9 @@ def generar_indice(mercados: list[dict]) -> dict:
         if not archivo.exists():
             continue
         datos = json.loads(archivo.read_text(encoding="utf-8"))
-        if not datos["productos"]:
+        # Solo centrales con frutas u hortalizas propias: una que únicamente tiene huevo o el pollo
+        # de referencia aparecería casi vacía en el selector de mercado.
+        if not any(p["categoria"] not in ("Huevo", "Pollo") for p in datos["productos"]):
             continue
         sem = datos["semanas"][-1] if datos["semanas"] else ""
         con_datos.append({**m, "ultimaSemana": sem, "ultimaFecha": datos.get("ultimaFecha", ""),
@@ -246,6 +393,8 @@ def main() -> None:
     ap.add_argument("--hasta", type=date.fromisoformat, default=date.today(), help="fecha final AAAA-MM-DD")
     ap.add_argument("--mercados", nargs="*", help="ids de mercado (por defecto, todos)")
     ap.add_argument("--solo-indice", action="store_true", help="no descargar, solo regenerar indice.json")
+    ap.add_argument("--fuentes", nargs="*", default=["frutas", "huevo", "pollo"], choices=["frutas", "huevo", "pollo"],
+                    help="qué descargar (por defecto, todo)")
     args = ap.parse_args()
 
     mercados = json.loads(CATALOGO_MERCADOS.read_text(encoding="utf-8"))
@@ -256,14 +405,21 @@ def main() -> None:
         sesion = requests.Session()
         sesion.headers["User-Agent"] = "Mozilla/5.0"
         elegidos = [m for m in mercados if not args.mercados or m["id"] in args.mercados]
+        pollo = descargar_pollo(desde, args.hasta, sesion) if "pollo" in args.fuentes else {}
+        if pollo:
+            print("Pollo: " + ", ".join(f"{r} ({len(fs)} filas)" for r, fs in pollo.items()))
         for m in elegidos:
             filas: list[dict] = []
             inicio = desde
-            while inicio <= args.hasta:
+            while "frutas" in args.fuentes and inicio <= args.hasta:
                 fin = min(inicio + timedelta(days=TAMANO_BLOQUE_DIAS - 1), args.hasta)
                 filas += descargar(m["id"], inicio, fin, sesion)
                 inicio = fin + timedelta(days=1)
                 time.sleep(1)  # ser amables con el servidor
+            if "huevo" in args.fuentes:
+                filas += descargar_huevo(m["id"], desde, args.hasta, sesion)
+            if pollo and (region := region_pollo(m)):
+                filas += pollo.get(region, [])
             semanas, info, ultima_fecha = leer_mercado(m["id"])
             if filas:
                 ultima_fecha = max(ultima_fecha, max(f["fecha"] for f in filas).isoformat())

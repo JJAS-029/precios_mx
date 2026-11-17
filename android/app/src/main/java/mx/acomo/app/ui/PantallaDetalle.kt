@@ -53,6 +53,7 @@ import mx.acomo.app.data.Semaforo
 import mx.acomo.app.data.etiquetaSemana
 import mx.acomo.app.data.evaluarPrecio
 import mx.acomo.app.data.nombreVisible
+import mx.acomo.app.data.regionReferencia
 import mx.acomo.app.data.pesos
 import mx.acomo.app.data.porcentaje
 import mx.acomo.app.data.resumen
@@ -130,6 +131,9 @@ fun PantallaDetalle(
                         Text(producto.categoria, style = MaterialTheme.typography.labelLarge)
                         val fecha = fechaCorta(fechaDatos)
                         if (fecha.isNotBlank()) Text("Dato más reciente: $fecha", style = MaterialTheme.typography.labelMedium)
+                        producto.regionReferencia?.let {
+                            Text("Referencia: centros de distribución de $it", style = MaterialTheme.typography.labelMedium)
+                        }
                     }
                 }
                 Spacer(Modifier.height(12.dp))
@@ -179,25 +183,39 @@ fun PantallaDetalle(
             TarjetaGrafica(producto, mercado.ciudad)
 
             // ----- mapa por estado
-            TarjetaMapa(indice, producto.id, mercado)
+            // El pollo es un precio regional de referencia: un mapa o una comparación entre centrales
+            // repetiría el mismo precio en varias y se vería engañoso.
+            if (producto.regionReferencia != null) {
+                Text(
+                    "Esta central de abasto no reporta ${producto.nombreVisible.lowercase()}. El SNIIM solo publica precios de pollo " +
+                        "de algunos centros de distribución; aquí se muestra el de ${producto.regionReferencia}, el más cercano.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            } else {
+                TarjetaMapa(indice, producto.id, mercado)
+            }
 
             // ----- comparación entre mercados
-            Tarjeta {
-                Text("En mercados cercanos", style = MaterialTheme.typography.titleSmall)
-                val ultimos = indice.ultimos[producto.id].orEmpty()
-                val precios = indice.cercanos(mercado, MERCADOS_COMPARACION + 4)
-                    .mapNotNull { m -> ultimos[m.id]?.let { m to it } }
-                    .take(MERCADOS_COMPARACION)
-                val masBarato = precios.minOfOrNull { it.second }
-                precios.forEach { (m, frec) ->
-                    val actual = m.id == mercado.id
-                    Row(Modifier.fillMaxWidth().padding(top = 6.dp)) {
-                        Text(
-                            m.ciudad + if (frec == masBarato && precios.size > 1) "  · más barato" else "",
-                            fontWeight = if (actual) FontWeight.Bold else FontWeight.Normal,
-                        )
-                        Spacer(Modifier.weight(1f))
-                        Text(pesos(frec), fontWeight = if (actual) FontWeight.Bold else FontWeight.Normal)
+            if (producto.regionReferencia == null) {
+                Tarjeta {
+                    Text("En mercados cercanos", style = MaterialTheme.typography.titleSmall)
+                    val ultimos = indice.ultimos[producto.id].orEmpty()
+                    val precios = indice.cercanos(mercado, MERCADOS_COMPARACION + 4)
+                        .mapNotNull { m -> ultimos[m.id]?.let { m to it } }
+                        .take(MERCADOS_COMPARACION)
+                    val masBarato = precios.minOfOrNull { it.second }
+                    precios.forEach { (m, frec) ->
+                        val actual = m.id == mercado.id
+                        Row(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+                            Text(
+                                m.ciudad + if (frec == masBarato && precios.size > 1) "  · más barato" else "",
+                                fontWeight = if (actual) FontWeight.Bold else FontWeight.Normal,
+                            )
+                            Spacer(Modifier.weight(1f))
+                            Text(pesos(frec), fontWeight = if (actual) FontWeight.Bold else FontWeight.Normal)
+                        }
                     }
                 }
             }

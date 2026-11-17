@@ -24,6 +24,12 @@ private val SINONIMOS = mapOf(
     "Nopal" to "nopales",
 )
 
+/**
+ * Producto cuyo precio no viene de esta central sino de la región más cercana que lo reporta
+ * (el pollo: calidad "Ref. Ciudad de México"). null si es un precio propio del mercado.
+ */
+val Producto.regionReferencia: String? get() = calidad.removePrefix("Ref. ").takeIf { calidad.startsWith("Ref. ") }
+
 val Producto.nombreVisible: String
     get() = NOMBRES_COMUNES[nombre] ?: nombre
 
@@ -40,6 +46,7 @@ private val EMOJIS = listOf(
     "nopal" to "🌵", "cacahuate" to "🥜", "nuez" to "🌰", "camote" to "🍠", "berenjena" to "🍆",
     "jamaica" to "🌺", "champinon" to "🍄", "ejote" to "🫛", "haba" to "🫛", "chicharo" to "🫛",
     "papaya" to "🍈", "guayaba" to "🍐", "granada" to "🍎", "jicama" to "🥔", "betabel" to "🥕",
+    "huevo" to "🥚", "pollo" to "🍗", "pechuga" to "🍗", "pierna" to "🍗",
     "cilantro" to "🌿", "perejil" to "🌿", "epazote" to "🌿", "yerbabuena" to "🌿", "oregano" to "🌿",
 )
 
@@ -224,6 +231,8 @@ enum class Semaforo { VERDE, AMARILLO, ROJO }
  */
 fun factorMenudeo(categoria: String): Double = when (normalizar(categoria)) {
     "chiles secos" -> 1.4
+    // Huevo y pollo: se maltratan menos que la verdura y el margen al menudeo suele ser menor.
+    "huevo", "pollo" -> 1.25
     else -> 1.5
 }
 

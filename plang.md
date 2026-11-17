@@ -27,7 +27,7 @@ App Android ──descarga──> raw.githubusercontent.com/JJAS-029/precios_mx/
 * `ProductoId=-1` trae todos los productos de un mercado; `PreciosPorId=2` = pesos por kg (calculado).
 * Datos diarios (lunes a viernes): mínimo, máximo y frecuente. Catálogo de mercados con coordenadas aproximadas en `recolector/mercados.json`.
 
-### Pollo, huevo y cárnicos (investigado el 2026-11-16, pendiente de integrar)
+### Pollo, huevo y cárnicos (huevo y pollo integrados el 2026-11-17)
 Base: `http://www.economia-sniim.gob.mx/SNIIM-Pecuarios-Nacionales/`
 
 | Producto | Consulta | Cobertura | Frecuencia | Ejemplo (nov-2026) | ¿Útil para la app? |
@@ -101,7 +101,7 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
 * Botón 🛒 (con contador) en la barra superior; en el detalle, "🛒 Agregar" y selector − / + (250 g en 250 g hasta 2 kg, luego medio kilo).
 * Total estimado en mercado o tianguis (mayoreo × factor), total de mayoreo, aviso de productos sin precio en el mercado elegido y "Compartir lista" (texto para WhatsApp). Los estimados se muestran en pesos enteros.
 * La lista se guarda en el teléfono y sirve al cambiar de mercado (el id del producto es el mismo).
-* Pendiente: piezas (aguacate, piña, lechuga) con peso promedio por pieza; varias listas guardadas.
+* ✔ Compras por pieza con peso promedio (aguacate 200 g, piña 1.5 kg, lechuga 500 g…), cambiable a kg; listas guardadas con nombre ("Mandado de la semana").
 
 ### 💰 Modelo de monetización
 * **Gratis con anuncios:** un solo banner en la pantalla principal. Nada de anuncios de pantalla completa ni en la pantalla de detalle (es la que se usa frente al puesto).
@@ -134,7 +134,15 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
 * Lista: "De temporada en <mes>" (productos que suelen bajar ≥ 8 % ese mes, una tarjeta por producto).
 * Detalle: tarjeta "Temporada" con "Suele estar más barato en dic–mar", el mes actual y 12 barras divergentes.
 * **Correrlo una vez al año** (noviembre): `python recolector/temporada.py` (ajustar `DESDE`/`HASTA`).
-* Pendiente: aviso "Empieza la temporada de …" en las notificaciones.
+* ✔ Aviso mensual "Empieza la temporada de …" (interruptor propio en Ajustes, canal de notificación "Temporada"; la primera vez espera al cambio de mes).
+
+### ✔ Fase 3.14: Huevo y pollo
+* **Huevo** blanco y rojo (`e_Hue.asp`, semanal, mismos ids de mercado): categoría "Huevo", margen de menudeo ×1.25.
+* **Pollo** entero (mediana de marcas), pechuga y pierna/muslo (`e_Ent.asp` y `e_Pza.asp` con `RegPag=5000`, todos
+  los destinos en una página). Solo hay 6 regiones (CDMX, Querétaro, Durango, Nayarit, Zacatecas, La Paz); cada central
+  a menos de 200 km toma la más cercana como **referencia** (calidad "Ref. Ciudad de México"). En el detalle se aclara
+  y no se muestran el mapa ni la comparación entre centrales (repetirían el mismo precio).
+* `python recolector/sniim.py --fuentes huevo|pollo|frutas` para descargar solo una fuente.
 
 ### ⏳ Fase 4: Antes de publicar en Google Play
 * ✔ Cuenta de desarrollador de Google Play: ya existe.
@@ -154,10 +162,12 @@ Ordenadas de más fácil a más trabajo:
 2. ~~**Calculadora / carrito de presupuesto.**~~ ✅ (Fase 3.10, falta lo de piezas). El usuario arma su lista ("2 kg jitomate, 1 kg cebolla, 3 aguacates…") y ve el costo estimado al menudeo (mayoreo × factor), con total y semáforo por producto. Para piezas (aguacate, piña, lechuga) hace falta un peso promedio por pieza. Guardar listas frecuentes ("mandado de la semana").
 3. ~~**Productos de temporada.**~~ ✅ (Fase 3.13). Con el historial de 52 semanas se calcula en qué meses cada producto suele estar más barato. Sección "De temporada este mes" y aviso del tipo "Empieza la temporada de mandarina".
 4. ~~**Avisos de precios bajos.**~~ ✅ (Fase 3.11). El usuario marca productos favoritos y recibe una notificación cuando bajan cierto % o están abajo de su promedio. Se puede hacer local: WorkManager revisa los datos nuevos cada miércoles y lanza una notificación, sin servidor. Requiere permiso de notificaciones (Android 13+).
-5. **Huevo y pollo** (ver sección 3). Huevo primero, porque cubre los mismos mercados.
+5. ~~**Huevo y pollo**~~ ✅ (Fase 3.14).
 6. **Reportes de usuarios** ("pagué $X en el tianguis de Y") para tener precio de menudeo real; aquí entraría Firebase.
 7. ~~**Mapa**~~ ✅ (Fase 3.12, mapa de precios por estado). **Mapa de mercados.** Opcional; el buscador con ubicación ya resuelve la selección. Un mapa requiere el SDK de Google Maps (API key) u OpenStreetMap (osmdroid).
 8. Datos abiertos de PROFECO (Quién es Quién en los Precios) para calibrar el factor de menudeo.
+   *Investigado el 2026-11-17:* el portal qqp.profeco.gob.mx permite consultar, pero no se encontró una descarga
+   CSV oficial actualizada. Pendiente; mientras tanto, los registros de "Mis precios" sirven para calibrar.
 
 ## 6. Pendientes y decisiones abiertas
 * Calibrar el factor de menudeo (hoy ×1.5); usar los CSV de "Mis precios".

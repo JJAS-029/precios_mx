@@ -271,7 +271,7 @@ private fun FilaProducto(p: Producto, r: Resumen, onAbrir: (String) -> Unit) {
         leadingContent = { InsigniaProducto(p) },
         headlineContent = { Text(p.nombreVisible, fontWeight = FontWeight.Medium) },
         supportingContent = {
-            val calidad = if (p.calidad == "Primera") "" else " · ${p.calidad}"
+            val calidad = if (p.calidad.isBlank() || p.calidad == "Primera") "" else " · ${p.calidad}"
             Text("${p.categoria}$calidad")
         },
         trailingContent = {
