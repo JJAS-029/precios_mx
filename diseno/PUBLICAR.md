@@ -99,7 +99,21 @@ Antes de cada versión nueva, subir `versionCode` (y `versionName`) en `app/buil
 12 testers durante 14 días antes de poder pasar a producción. Crear una lista de correos en
 Play Console → Pruebas → Prueba cerrada, subir el `.aab` y mandarles el enlace de suscripción.
 
-## 8. Plus (Google Play Billing) — pendiente
-1. Play Console → Monetizar → Productos → **Productos integrados**: id `plus`, pago único.
-2. Integrar `com.android.billingclient:billing-ktx` en la app: comprar, confirmar (acknowledge) y
-   restaurar al abrir. Requiere que la app ya esté subida a una pista de prueba.
+## 8. Plus (Google Play Billing)
+La app ya trae la librería de pagos (versión 2 / 0.2.0, `Compras.kt`). Pasos en Play Console:
+1. **Perfil de pagos:** Configuración → Perfil de pagos (cuenta de comerciante, datos fiscales y banco).
+   Sin esto no se pueden crear productos de pago.
+2. Subir la versión 2 (`.aab` con el permiso BILLING) a la prueba cerrada. Play Console no deja crear
+   productos hasta que una versión con la librería de pagos esté subida.
+3. **Monetizar con Play → Productos → Productos únicos → Crear producto:**
+   * ID del producto: **`plus`** (exacto; no se puede cambiar después).
+   * Nombre: `¿A cómo? Plus` · Descripción: `Sin anuncios y temas de color extra.`
+   * Opción de compra: **Comprar**, precio en MXN (sugerido $39–$49). Activar el producto.
+4. **Pruebas sin cobro:** Configuración → Prueba de licencias → agregar los correos de prueba
+   (incluido el tuyo). Esas cuentas ven "Compra de prueba" y no se les cobra.
+5. Probar instalando desde el enlace de la prueba cerrada (no desde Android Studio): Ajustes → "Obtener Plus".
+6. Al activar el cobro, agregar la línea de Plus a la descripción de la ficha.
+
+Cómo funciona en la app: al abrir y al entrar a Ajustes consulta las compras; si encuentra `plus` pagado,
+lo activa y lo confirma (acknowledge; si no, Google lo reembolsa a los 3 días). Si la consulta completa
+ya no lo trae (reembolso), lo quita. Los pagos pendientes (efectivo en tienda) se activan al confirmarse.

@@ -1,6 +1,9 @@
 package mx.acomo.app.ui
 
 import android.Manifest
+import android.app.Activity
+import androidx.activity.compose.LocalActivity
+import mx.acomo.app.EstadoCompra
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -62,6 +65,9 @@ fun PantallaAjustes(
     estilo: EstiloColor,
     modo: ModoTema,
     plus: Boolean,
+    compra: EstadoCompra,
+    onComprar: (Activity) -> Unit,
+    onLimpiarMensajeCompra: () -> Unit,
     avisos: Boolean,
     /** Productos seguidos: id -> nombre. */
     seguidos: Map<String, String>,
@@ -88,10 +94,13 @@ fun PantallaAjustes(
             Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            TarjetaPlus(plus, onObtener = {
-                aviso = "Muy pronto: Plus se podrá comprar cuando la app esté en Google Play."
+            val actividad = LocalActivity.current
+            TarjetaPlus(plus, compra.precio, compra.pendiente, onObtener = {
+                aviso = null
+                onLimpiarMensajeCompra()
+                actividad?.let(onComprar)
             })
-            aviso?.let {
+            (compra.mensaje ?: aviso)?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             }
 
@@ -178,7 +187,7 @@ fun PantallaAjustes(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun TarjetaPlus(plus: Boolean, onObtener: () -> Unit) {
+private fun TarjetaPlus(plus: Boolean, precio: String?, pendiente: Boolean, onObtener: () -> Unit) {
     Card(
         shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
@@ -194,8 +203,21 @@ private fun TarjetaPlus(plus: Boolean, onObtener: () -> Unit) {
                 Text("✓ Tienes Plus. ¡Gracias por apoyar la app!")
             } else {
                 Text("• Sin anuncios\n• 4 temas de color extra\n• Colores de tu fondo de pantalla (Android 12+)")
+                Text(
+                    "Pago único. Se queda en tu cuenta de Google Play aunque cambies de teléfono.",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
                 Spacer(Modifier.height(12.dp))
-                Button(onClick = onObtener, shapes = ButtonDefaults.shapes()) { Text("Obtener Plus") }
+                Button(onClick = onObtener, enabled = !pendiente, shapes = ButtonDefaults.shapes()) {
+                    Text(
+                        when {
+                            pendiente -> "Pago pendiente"
+                            precio != null -> "Obtener Plus · $precio"
+                            else -> "Obtener Plus"
+                        },
+                    )
+                }
             }
         }
     }

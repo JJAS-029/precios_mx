@@ -117,10 +117,15 @@ private fun App(vm: PreciosViewModel, productoInicial: String?) {
         }
         ajustes -> {
             BackHandler { ajustes = false }
+            val compra by vm.compra.collectAsStateWithLifecycle()
+            LaunchedEffect(Unit) { vm.refrescarCompras() }
             PantallaAjustes(
                 estilo = estado.estilo,
                 modo = estado.modo,
                 plus = estado.plus,
+                compra = compra,
+                onComprar = vm::comprarPlus,
+                onLimpiarMensajeCompra = vm::limpiarMensajeCompra,
                 avisos = estado.avisos,
                 seguidos = estado.seguidos,
                 onAvisos = vm::cambiarAvisos,

@@ -122,7 +122,7 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
 * ✔ R8: AdMob trae WorkManager 2.7, que fallaba en release; se fuerza WorkManager 2.12.
 * ✔ **AdMob:** app "¿A cómo?" registrada; IDs en `android/gradle.properties` (la versión debug siempre usa anuncios de prueba). `app-ads.txt` ya en `jjas-029.github.io`.
 * **Consentimiento de anuncios:** si se distribuye solo en México no se exige el formulario europeo (GDPR); si se abre a otros países, integrar UMP (`user-messaging-platform`).
-* **Plus con Google Play Billing:** crear el producto "plus" (pago único) en Play Console e integrar `billing-ktx`; al abrir la app, confirmar la compra y restaurarla en otro teléfono. Quitar el interruptor de prueba de la versión release (ya está oculto con `BuildConfig.DEBUG`).
+* ✔ (código) **Plus con Google Play Billing** (billing 8.3, `Compras.kt`, versión 2). Falta en Play Console: crear el producto "plus" (pago único) en Play Console e integrar `billing-ktx`; al abrir la app, confirmar la compra y restaurarla en otro teléfono. Quitar el interruptor de prueba de la versión release (ya está oculto con `BuildConfig.DEBUG`).
 * ✔ Política de privacidad publicada en `https://jjas-029.github.io/acomo/privacidad.html` (página de la app en `/acomo/`). La app no recopila datos personales y la ubicación solo se usa en el teléfono, **pero AdMob sí usa el identificador de publicidad**; debe decirlo la política y el formulario de seguridad de datos.
 * ✔ Textos de la ficha y respuestas de seguridad de datos en `diseno/PUBLICAR.md`; ícono 512 px en `diseno/play_store_512.png`. ✔ Capturas (6, 1080×1920) e imagen destacada 1024×500 en `diseno/play/`. Falta llenar los formularios en Play Console.
 

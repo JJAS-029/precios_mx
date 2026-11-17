@@ -9,7 +9,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import android.app.Activity
 import mx.acomo.app.AvisosPrecios
+import mx.acomo.app.BuildConfig
+import mx.acomo.app.Compras
+import mx.acomo.app.EstadoCompra
 import mx.acomo.app.data.AlmacenLocal
 import mx.acomo.app.data.ArticuloMandado
 import mx.acomo.app.data.DatosMercado
@@ -70,8 +74,18 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
 
     private var cargaMercado: Job? = null
 
+    /** ¿A cómo? Plus con Google Play Billing. */
+    private val compras = Compras(app) { activo ->
+        // En la versión de desarrollo manda el interruptor de prueba, no Google Play.
+        if (!activo && BuildConfig.DEBUG) return@Compras
+        if (almacen.plus != activo) almacen.plus = activo
+        _estado.update { it.copy(plus = activo) }
+    }
+    val compra: StateFlow<EstadoCompra> = compras.estado
+
     init {
         AvisosPrecios.programar(app)
+        compras.conectar()
         viewModelScope.launch {
             val registros = almacen.registros()
             val indice = repo.indiceCache()
@@ -148,7 +162,16 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
         _estado.update { it.copy(modo = modo) }
     }
 
-    /** Solo para pruebas mientras no existe el producto en Google Play. */
+    fun comprarPlus(actividad: Activity) = compras.comprar(actividad)
+
+    /** Al abrir Ajustes: vuelve a consultar precio y compras (p. ej. un pago pendiente que ya se confirmó). */
+    fun refrescarCompras() = compras.conectar()
+
+    fun limpiarMensajeCompra() = compras.limpiarMensaje()
+
+    override fun onCleared() = compras.cerrar()
+
+    /** Solo en la versión de desarrollo: activar Plus sin comprar. */
     fun cambiarPlus(activo: Boolean) {
         almacen.plus = activo
         _estado.update { it.copy(plus = activo) }
