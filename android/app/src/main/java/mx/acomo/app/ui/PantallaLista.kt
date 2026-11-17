@@ -1,5 +1,9 @@
 package mx.acomo.app.ui
 
+import mx.acomo.app.data.MESES_LARGOS
+import mx.acomo.app.data.deTemporada
+import mx.acomo.app.data.mesActual
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -136,6 +140,9 @@ fun PantallaLista(
             conResumen.filter { it.first.coincide(busqueda) }
         }
         val cambios = remember(datos) { sugerenciasCambio(datos.productos) }
+        val deTemporada = remember(datos, estado.temporada) {
+            estado.temporada?.deTemporada(datos.productos).orEmpty()
+        }
         val baratos = remember(conResumen) {
             conResumen.filter { it.second.vsPromedio <= UMBRAL_BARATO }
                 .sortedBy { it.second.vsPromedio }
@@ -185,11 +192,15 @@ fun PantallaLista(
                         }
                     }
                 }
+                if (busqueda.isBlank() && deTemporada.isNotEmpty()) {
+                    item { Encabezado("De temporada en ${MESES_LARGOS[mesActual()]}") }
+                    item { SeccionTemporada(deTemporada, onAbrirProducto) }
+                }
                 if (busqueda.isBlank() && cambios.isNotEmpty()) {
                     item { Encabezado("Está caro, mejor cambia") }
                     item { SeccionCambios(cambios, onAbrirProducto) }
                 }
-                if (busqueda.isBlank() && (baratos.isNotEmpty() || cambios.isNotEmpty())) {
+                if (busqueda.isBlank() && (baratos.isNotEmpty() || cambios.isNotEmpty() || deTemporada.isNotEmpty())) {
                     item { Encabezado("Todos los productos") }
                 }
 

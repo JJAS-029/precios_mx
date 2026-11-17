@@ -81,6 +81,9 @@ fun PantallaDetalle(
     /** ¿Tiene aviso de bajada? */
     seguido: Boolean,
     onSeguir: (Boolean) -> Unit,
+    /** Índice de temporada (12 meses) o null si no hay suficiente historia. */
+    temporada: List<Double?>?,
+    aniosTemporada: String,
     onVolver: () -> Unit,
 ) {
     Scaffold(
@@ -167,6 +170,9 @@ fun PantallaDetalle(
 
             // ----- equivalencias
             TarjetaAlternativas(producto, r, alternativas, onAbrirProducto)
+
+            // ----- temporada
+            temporada?.let { TarjetaTemporada(it, aniosTemporada) }
 
             // ----- gráfica
             Tarjeta {

@@ -21,6 +21,7 @@ import mx.acomo.app.data.Indice
 import mx.acomo.app.data.Mercado
 import mx.acomo.app.data.Producto
 import mx.acomo.app.data.RegistroPrecio
+import mx.acomo.app.data.Temporada
 import mx.acomo.app.data.Repositorio
 import mx.acomo.app.data.evaluarPrecio
 import mx.acomo.app.data.hoy
@@ -46,6 +47,8 @@ data class EstadoUi(
     /** Productos con aviso de bajada: id -> nombre. */
     val seguidos: Map<String, String> = emptyMap(),
     val avisos: Boolean = true,
+    /** Índice de temporada por producto (varios años de historia). */
+    val temporada: Temporada? = null,
 ) {
     val mercadoActual: Mercado? get() = indice?.mercados?.find { it.id == mercado }
 
@@ -90,7 +93,8 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
             val registros = almacen.registros()
             val indice = repo.indiceCache()
             val datos = _estado.value.mercado?.let { repo.mercadoCache(it) }
-            _estado.update { it.copy(indice = indice, datos = datos, registros = registros) }
+            val temporada = repo.temporadaCache()
+            _estado.update { it.copy(indice = indice, datos = datos, registros = registros, temporada = temporada) }
             actualizar()
         }
     }
@@ -108,6 +112,8 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }.exceptionOrNull()
             _estado.update { it.copy(cargando = false, error = error?.let { mensajeError() }) }
+            // Cambia una vez al año; si falla, se queda la copia guardada.
+            runCatching { repo.descargarTemporada() }.onSuccess { tem -> _estado.update { it.copy(temporada = tem) } }
         }
     }
 

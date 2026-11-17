@@ -58,7 +58,7 @@ import kotlin.math.roundToInt
  * Escala divergente (azul = más barato, rojo = más caro, gris = como en el país), de ColorBrewer RdBu:
  * se distingue con cualquier tipo de daltonismo, a diferencia de verde contra rojo.
  */
-private object ColoresMapa {
+internal object ColoresMapa {
     private val claro = listOf(0xFF2166AC, 0xFF92C5DE, 0xFFE4E2DC, 0xFFF4A582, 0xFFB2182B)
     private val oscuro = listOf(0xFF4393C3, 0xFF92C5DE, 0xFF57564F, 0xFFF4A582, 0xFFD6604D)
 

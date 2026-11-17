@@ -18,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.remember
 import mx.acomo.app.data.alternativas
+import mx.acomo.app.data.indice
 import mx.acomo.app.data.fechaDatos
 import mx.acomo.app.ui.PantallaAjustes
 import mx.acomo.app.ui.PantallaDetalle
@@ -100,6 +101,9 @@ private fun App(vm: PreciosViewModel, productoInicial: String?) {
                 onAbrirMandado = { productoId = null; mandado = true },
                 seguido = producto.id in estado.seguidos,
                 onSeguir = { vm.seguir(producto, it) },
+                temporada = estado.temporada?.indice(producto.id),
+                aniosTemporada = estado.temporada?.desde?.take(4)?.toIntOrNull()
+                    ?.let { "${java.time.LocalDate.now().year - it} años" } ?: "varios años",
                 onVolver = { productoId = null },
             )
         }

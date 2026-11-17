@@ -23,6 +23,10 @@ import mx.acomo.app.data.presupuesto
 import mx.acomo.app.data.alternativas
 import mx.acomo.app.data.sugerenciasCambio
 import mx.acomo.app.data.bajadas
+import mx.acomo.app.data.Temporada
+import mx.acomo.app.data.rangoMeses
+import mx.acomo.app.data.mesesBaratos
+import mx.acomo.app.data.deTemporada
 import mx.acomo.app.data.preciosPorEstado
 import mx.acomo.app.data.NivelPrecio
 import mx.acomo.app.data.MapaEstados
@@ -98,6 +102,26 @@ class AnalisisTest {
         val limon5 = prod("Limón c/semilla # 5", 18.0, 15.0)
         val sinSemilla = prod("Limón s/semilla", 22.0, 20.0)
         assertEquals(listOf("Limón s/semilla"), alternativas(limon4, listOf(limon4, limon5, sinSemilla)).map { it.producto.nombre })
+    }
+
+    @Test fun temporada() {
+        assertEquals("dic–mar", rangoMeses(listOf(0, 1, 2, 11)))
+        assertEquals("abr y ago", rangoMeses(listOf(3, 7)))
+        assertEquals("ene, may–jun y nov", rangoMeses(listOf(0, 4, 5, 10)))
+        assertEquals("todo el año", rangoMeses((0..11).toList()))
+        assertEquals("", rangoMeses(emptyList()))
+
+        val mandarina = listOf(0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.1, 1.05, 1.0, 0.97, 0.9, 0.88)
+        assertEquals(listOf(0, 1, 10, 11), mesesBaratos(mandarina))
+
+        val tem = Temporada(productos = mapOf(
+            normalizarId("Mandarina") to mandarina,
+            normalizarId("Tomate Saladette") to List(12) { 1.0 },
+        ))
+        val m = prod("Mandarina", 20.0, 18.0, "Frutas")
+        val j = prod("Tomate Saladette", 30.0, 30.0)
+        assertEquals(listOf(m.id), tem.deTemporada(listOf(m, j), mes = 11).map { it.first.id })
+        assertTrue(tem.deTemporada(listOf(m, j), mes = 5).isEmpty())
     }
 
     @Test fun mapaPorEstado() {

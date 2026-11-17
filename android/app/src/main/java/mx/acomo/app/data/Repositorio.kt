@@ -28,7 +28,10 @@ class Repositorio(
     suspend fun indiceCache(): Indice? = leer("indice.json")
     suspend fun mercadoCache(id: String): DatosMercado? = leer("mercados/$id.json")
 
+    suspend fun temporadaCache(): Temporada? = leer("temporada.json")
+
     suspend fun descargarIndice(): Indice = descargar("indice.json")
+    suspend fun descargarTemporada(): Temporada = descargar("temporada.json")
     suspend fun descargarMercado(id: String): DatosMercado = descargar("mercados/$id.json")
 
     private suspend inline fun <reified T> leer(ruta: String): T? = withContext(Dispatchers.IO) {

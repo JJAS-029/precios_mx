@@ -12,3 +12,4 @@ local.properties
 *.keystore
 .kotlin/
 keystore.properties
+recolector/historico/
