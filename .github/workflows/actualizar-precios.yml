@@ -9,6 +9,11 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  # No chocar con la actualización diaria de gasolina, que también hace push.
+  group: datos
+  cancel-in-progress: false
+
 jobs:
   actualizar:
     runs-on: ubuntu-latest
@@ -34,5 +39,6 @@ jobs:
             echo "Sin cambios"
           else
             git commit -m "datos: actualización SNIIM $(date -u +%F)"
+            git pull --rebase
             git push
           fi
