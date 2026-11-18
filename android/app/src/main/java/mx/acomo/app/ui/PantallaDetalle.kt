@@ -191,7 +191,7 @@ fun PantallaDetalle(
             temporada?.let { TarjetaTemporada(it, aniosTemporada) }
 
             // ----- gráfica
-            TarjetaGrafica(producto, mercado.ciudad)
+            TarjetaGrafica(producto, producto.regionReferencia ?: mercado.ciudad)
 
             // ----- mapa por estado
             // El pollo es un precio regional de referencia: un mapa o una comparación entre centrales
@@ -232,7 +232,8 @@ fun PantallaDetalle(
             }
 
             Text(
-                "Fuente: SNIIM, Secretaría de Economía. Precio de mayoreo en central de abasto, " +
+                "Fuente: SNIIM, Secretaría de Economía. Precio de mayoreo en " +
+                    (if (producto.regionReferencia != null) "centros de distribución, " else "central de abasto, ") +
                     "calculado por kilogramo. En mercados y tianguis es normal pagar más por el transporte y la venta al menudeo.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
