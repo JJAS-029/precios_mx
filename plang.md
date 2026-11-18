@@ -182,6 +182,19 @@ Ordenadas de más fácil a más trabajo:
    *Investigado el 2026-11-17:* el portal qqp.profeco.gob.mx permite consultar, pero no se encontró una descarga
    CSV oficial actualizada. Pendiente; mientras tanto, los registros de "Mis precios" sirven para calibrar.
 
+### Fase 6: Gasolina (propuesta del 2026-11-17)
+* **Fuente:** datos abiertos del regulador de energía (antes CRE, ahora CNE), libre uso:
+  * `https://publicacionexterna.azurewebsites.net/publicaciones/places` — cada gasolinera con `place_id`, razón social, `cre_id` y coordenadas.
+  * `https://publicacionexterna.azurewebsites.net/publicaciones/prices` — precio vigente por `place_id`: regular (Magna), premium, diésel.
+  * Revisado el 2026-11-17: 13,839 gasolineras con precio; regular mediana $23.99/L (premium $28.79, diésel $27.00).
+    En 10 km de Toluca hay 139, de $22.28 a $24.99 → ~$100 de diferencia en un tanque de 40 L.
+  * No trae fecha por precio y hay valores atípicos (p. ej. $13): filtrar contra la mediana nacional.
+* **Recolector diario** (GitHub Actions): unir ambos XML → `data/gasolina.json` compacto (~800 KB, ~250 KB comprimido).
+* **App:** pantalla "Gasolina": con la ubicación aproximada (o la ciudad de la central), las más baratas en 5/10 km,
+  con precio, distancia y botón "Ir" (Google Maps); selector Magna/Premium/Diésel; "ahorras ~$X por tanque".
+  La ubicación no sale del teléfono (como con los mercados).
+* Limpiar la razón social para mostrarla ("… SA DE CV"); no siempre se sabe la marca.
+
 ## 6. Pendientes y decisiones abiertas
 * Calibrar el factor de menudeo (hoy ×1.5); usar los CSV de "Mis precios".
 * Ampliar la tabla de nombres comunes y sinónimos por región (jitomate/tomate, elote, ejote…).
