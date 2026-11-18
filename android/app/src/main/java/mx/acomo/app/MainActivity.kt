@@ -134,6 +134,8 @@ private fun App(vm: PreciosViewModel, productoInicial: String?) {
                 cargando = estado.cargandoGasolina,
                 error = estado.errorGasolina,
                 mercado = mercado,
+                favoritas = estado.gasolinerasFavoritas,
+                onFavorita = vm::cambiarGasolineraFavorita,
                 onCargar = { vm.cargarGasolina() },
                 onVolver = { gasolina = false },
             )

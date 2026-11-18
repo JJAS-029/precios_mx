@@ -31,6 +31,7 @@ import mx.acomo.app.data.Combustible
 import mx.acomo.app.data.cercanas
 import mx.acomo.app.data.resumenGasolina
 import mx.acomo.app.data.distancia
+import mx.acomo.app.data.revisadoGasolina
 import mx.acomo.app.data.Temporada
 import mx.acomo.app.data.rangoMeses
 import mx.acomo.app.data.mesesBaratos
@@ -131,6 +132,12 @@ class AnalisisTest {
         assertEquals("350 m", distancia(0.37))
         assertEquals("2.3 km", distancia(2.34))
         assertEquals("12 km", distancia(12.8))
+        // 13:05 UTC = 7:05 en la Ciudad de México.
+        val ahora = java.time.ZonedDateTime.of(2026, 11, 18, 20, 0, 0, 0, java.time.ZoneId.of("America/Mexico_City"))
+        assertEquals("hoy a las 7:05", revisadoGasolina("2026-11-18T13:05:00+00:00", ahora))
+        assertEquals("ayer a las 7:05", revisadoGasolina("2026-11-17T13:05:00+00:00", ahora))
+        assertEquals("el dom 15 nov a las 7:05", revisadoGasolina("2026-11-15T13:05:00+00:00", ahora))
+        assertEquals("", revisadoGasolina("no es fecha", ahora))
     }
 
     @Test fun temporada() {

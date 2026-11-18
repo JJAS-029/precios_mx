@@ -189,6 +189,9 @@ Ordenadas de más fácil a más trabajo:
 * App: botón ⛽ en la lista → pantalla "Gasolina": ubicación aproximada o centro de la ciudad de la central;
   Magna/Premium/Diésel; radio 3/5/10 km; resumen (más barata, promedio, ahorro por tanque de 40 L); "Ir" abre Maps.
   Copia guardada; se vuelve a descargar si tiene más de 6 h.
+* Fecha de revisión visible arriba ("Precios revisados en la CNE hoy a las 7:05", en rojo si tiene más de 2 días).
+* Gasolineras favoritas (☆ en cada fila): sección "★ Mis gasolineras" con su precio de hoy aunque estén fuera del
+  radio y cuánto cuestan de más que la más barata cercana. Se guardan en las preferencias (entran al respaldo de Google).
 
 #### Notas de la propuesta
 * **Fuente:** datos abiertos del regulador de energía (antes CRE, ahora CNE), libre uso:
@@ -202,6 +205,13 @@ Ordenadas de más fácil a más trabajo:
   con precio, distancia y botón "Ir" (Google Maps); selector Magna/Premium/Diésel; "ahorras ~$X por tanque".
   La ubicación no sale del teléfono (como con los mercados).
 * Limpiar la razón social para mostrarla ("… SA DE CV"); no siempre se sabe la marca.
+
+### Cómo se actualizan los datos (automático)
+* **SNIIM** (frutas, verduras, huevo, pollo): GitHub Actions cada miércoles 15:00 UTC (`actualizar-precios.yml`).
+* **Gasolina**: GitHub Actions diario 13:00 UTC (`actualizar-gasolina.yml`).
+* Las dos se pueden correr a mano en GitHub → Actions → el flujo → "Run workflow".
+* **Temporada**: a mano una vez al año (noviembre): `python recolector/temporada.py` (ajustar `DESDE`/`HASTA`).
+* GitHub pausa los flujos programados si el repo pasa 60 días sin actividad; los commits automáticos lo evitan.
 
 ## 6. Pendientes y decisiones abiertas
 * Calibrar el factor de menudeo (hoy ×1.5); usar los CSV de "Mis precios".

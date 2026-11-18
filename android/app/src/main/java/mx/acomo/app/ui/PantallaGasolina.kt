@@ -53,12 +53,15 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mx.acomo.app.data.Combustible
 import mx.acomo.app.data.DatosGasolina
+import mx.acomo.app.data.Estacion
+import mx.acomo.app.data.favoritas
 import mx.acomo.app.data.GasolineraCercana
 import mx.acomo.app.data.LITROS_TANQUE
 import mx.acomo.app.data.Mercado
 import mx.acomo.app.data.cercanas
 import mx.acomo.app.data.distancia
-import mx.acomo.app.data.fechaCorta
+import mx.acomo.app.data.horasDesdeRevision
+import mx.acomo.app.data.revisadoGasolina
 import mx.acomo.app.data.pesos
 import mx.acomo.app.data.pesosRedondo
 import mx.acomo.app.data.resumenGasolina
@@ -72,6 +75,9 @@ fun PantallaGasolina(
     cargando: Boolean,
     error: String?,
     mercado: Mercado?,
+    /** place_id -> nombre. */
+    favoritas: Map<String, String>,
+    onFavorita: (Estacion) -> Unit,
     onCargar: () -> Unit,
     onVolver: () -> Unit,
 ) {
@@ -112,6 +118,15 @@ fun PantallaGasolina(
         val lista = remember(datos, origen, radio, tipo) {
             if (datos == null || origen == null) emptyList() else datos.cercanas(origen.first, origen.second, radio, tipo)
         }
+        val misGasolineras = remember(datos, origen, tipo, favoritas) {
+            datos?.favoritas(favoritas.keys, origen?.first, origen?.second, tipo).orEmpty()
+        }
+        val abrirMapa = { g: GasolineraCercana ->
+            val etiqueta = Uri.encode(g.estacion.n)
+            val uri = Uri.parse("geo:${g.estacion.a},${g.estacion.o}?q=${g.estacion.a},${g.estacion.o}($etiqueta)")
+            runCatching { contexto.startActivity(Intent(Intent.ACTION_VIEW, uri)) }
+            Unit
+        }
         LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
             item {
                 Column(Modifier.padding(horizontal = 16.dp)) {
@@ -146,6 +161,19 @@ fun PantallaGasolina(
                             FilterChip(selected = r == radio, onClick = { radio = r }, label = { Text("${r.toInt()} km") })
                         }
                     }
+                    datos?.let { d ->
+                        val cuando = revisadoGasolina(d.generado)
+                        val viejo = (horasDesdeRevision(d.generado) ?: 0.0) > 48
+                        if (cuando.isNotBlank()) {
+                            Text(
+                                "🕒 Precios revisados en la CNE $cuando" +
+                                    if (viejo) ". Pueden estar desactualizados." else "",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (viejo) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+                    }
                 }
             }
             error?.let { msg ->
@@ -177,12 +205,40 @@ fun PantallaGasolina(
                 }
                 else -> {
                     item { TarjetaResumenGasolina(lista, tipo, radio) }
-                    items(lista.take(50), key = { it.estacion.i }) { g ->
-                        FilaGasolinera(g, esLaMasBarata = g === lista.first()) {
-                            val etiqueta = Uri.encode(g.estacion.n)
-                            val uri = Uri.parse("geo:${g.estacion.a},${g.estacion.o}?q=${g.estacion.a},${g.estacion.o}($etiqueta)")
-                            runCatching { contexto.startActivity(Intent(Intent.ACTION_VIEW, uri)) }
+                    if (misGasolineras.isNotEmpty()) {
+                        item {
+                            Text(
+                                "★ Mis gasolineras",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
+                            )
                         }
+                        items(misGasolineras, key = { "fav-" + it.estacion.i }) { g ->
+                            FilaGasolinera(
+                                g, esLaMasBarata = false, favorita = true,
+                                diferencia = g.precio - lista.first().precio,
+                                onFavorita = { onFavorita(g.estacion) },
+                            ) { abrirMapa(g) }
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                        }
+                        item {
+                            Text(
+                                "Cerca de aquí",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
+                            )
+                        }
+                    }
+                    items(lista.take(50), key = { it.estacion.i }) { g ->
+                        FilaGasolinera(
+                            g, esLaMasBarata = g === lista.first(),
+                            favorita = g.estacion.i.toString() in favoritas,
+                            onFavorita = { onFavorita(g.estacion) },
+                        ) { abrirMapa(g) }
                         HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     }
                     if (lista.size > 50) {
@@ -198,11 +254,10 @@ fun PantallaGasolina(
                 }
             }
             item {
-                val fecha = datos?.generado?.let(::fechaCorta).orEmpty()
                 Text(
-                    "Fuente: Comisión Nacional de Energía (antes CRE), precios vigentes que reporta cada gasolinera" +
-                        (if (fecha.isNotBlank()) ", revisados el $fecha" else "") +
-                        ". El precio en la bomba puede haber cambiado. Tu ubicación solo se usa en tu teléfono.",
+                    "Fuente: Comisión Nacional de Energía (antes CRE), precios vigentes que reporta cada gasolinera. " +
+                        "La CNE no publica cuándo cambió cada precio, así que en la bomba puede ser distinto. " +
+                        "Tu ubicación solo se usa en tu teléfono.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(16.dp),
@@ -249,17 +304,40 @@ private fun TarjetaResumenGasolina(lista: List<GasolineraCercana>, tipo: Combust
 }
 
 @Composable
-private fun FilaGasolinera(g: GasolineraCercana, esLaMasBarata: Boolean, onIr: () -> Unit) {
+private fun FilaGasolinera(
+    g: GasolineraCercana,
+    esLaMasBarata: Boolean,
+    favorita: Boolean,
+    onFavorita: () -> Unit,
+    /** Para las favoritas: cuánto más cuesta que la más barata cercana (por litro). */
+    diferencia: Double? = null,
+    onIr: () -> Unit,
+) {
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onIr).padding(horizontal = 16.dp, vertical = 10.dp),
+        Modifier.fillMaxWidth().clickable(onClick = onIr).padding(start = 4.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("⛽", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.width(12.dp))
+        IconButton(onClick = onFavorita) {
+            Text(
+                if (favorita) "★" else "☆",
+                style = MaterialTheme.typography.titleLarge,
+                color = if (favorita) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         Column(Modifier.weight(1f)) {
             Text(g.estacion.n, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            val detalle = buildList {
+                if (!g.km.isNaN()) add("a ${distancia(g.km)}")
+                if (esLaMasBarata) add("la más barata")
+                diferencia?.let {
+                    add(
+                        if (it <= 0.005) "la más barata cerca"
+                        else "${pesos(it)} más por litro (~${pesosRedondo(it * LITROS_TANQUE)} por tanque)",
+                    )
+                }
+            }
             Text(
-                "a ${distancia(g.km)}" + if (esLaMasBarata) " · la más barata" else "",
+                detalle.joinToString(" · "),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

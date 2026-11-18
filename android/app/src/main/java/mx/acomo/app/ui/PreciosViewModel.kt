@@ -18,6 +18,7 @@ import mx.acomo.app.data.AlmacenLocal
 import mx.acomo.app.data.ArticuloMandado
 import mx.acomo.app.data.ListaGuardada
 import mx.acomo.app.data.DatosGasolina
+import mx.acomo.app.data.Estacion
 import mx.acomo.app.data.DatosMercado
 import mx.acomo.app.data.Indice
 import mx.acomo.app.data.Mercado
@@ -58,6 +59,8 @@ data class EstadoUi(
     /** Precios de gasolina (se cargan al abrir la pantalla de gasolina). */
     val gasolina: DatosGasolina? = null,
     val cargandoGasolina: Boolean = false,
+    /** Gasolineras favoritas: place_id -> nombre. */
+    val gasolinerasFavoritas: Map<String, String> = emptyMap(),
     val errorGasolina: String? = null,
 ) {
     val mercadoActual: Mercado? get() = indice?.mercados?.find { it.id == mercado }
@@ -82,6 +85,7 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
             listas = almacen.listas,
             seguidos = almacen.seguidos,
             favoritos = almacen.favoritos,
+            gasolinerasFavoritas = almacen.gasolinerasFavoritas,
             avisos = almacen.avisos,
             avisosTemporada = almacen.avisosTemporada,
         ),
@@ -128,6 +132,14 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
             // Cambia una vez al año; si falla, se queda la copia guardada.
             runCatching { repo.descargarTemporada() }.onSuccess { tem -> _estado.update { it.copy(temporada = tem) } }
         }
+    }
+
+    fun cambiarGasolineraFavorita(estacion: Estacion) {
+        val id = estacion.i.toString()
+        val actuales = _estado.value.gasolinerasFavoritas
+        val nuevas = if (id in actuales) actuales - id else actuales + (id to estacion.n)
+        almacen.gasolinerasFavoritas = nuevas
+        _estado.update { it.copy(gasolinerasFavoritas = nuevas) }
     }
 
     /** Copia guardada al instante; descarga otra si no hay o tiene más de 6 horas (los precios cambian a diario). */

@@ -51,6 +51,13 @@ fun DatosGasolina.cercanas(lat: Double, lon: Double, radioKm: Double, tipo: Comb
         .toList()
 }
 
+/** Gasolineras favoritas con su precio de [tipo] y distancia desde el punto (aunque estén lejos). */
+fun DatosGasolina.favoritas(ids: Set<String>, lat: Double?, lon: Double?, tipo: Combustible): List<GasolineraCercana> =
+    estaciones.filter { it.i.toString() in ids }.mapNotNull { e ->
+        val precio = tipo.precio(e) ?: return@mapNotNull null
+        GasolineraCercana(e, precio, if (lat != null && lon != null) distanciaKm(lat, lon, e.a, e.o) else Double.NaN)
+    }.sortedBy { it.precio }
+
 /** Litros de un tanque típico, para decir cuánto se ahorra. */
 const val LITROS_TANQUE = 40.0
 
@@ -74,3 +81,21 @@ fun distancia(km: Double): String = when {
     km < 10 -> "${(km * 10).toInt() / 10.0} km"
     else -> "${km.toInt()} km"
 }
+
+/**
+ * Cuándo se revisaron los precios en la CNE, en hora local: "hoy a las 7:12", "ayer a las 7:12" o
+ * "el mar 17 nov a las 7:12". Vacío si la fecha no es válida.
+ */
+fun revisadoGasolina(iso: String, ahora: java.time.ZonedDateTime = java.time.ZonedDateTime.now()): String {
+    val f = runCatching { java.time.OffsetDateTime.parse(iso).atZoneSameInstant(ahora.zone) }.getOrNull() ?: return ""
+    val hora = "${f.hour}:${f.minute.toString().padStart(2, '0')}"
+    return when (java.time.temporal.ChronoUnit.DAYS.between(f.toLocalDate(), ahora.toLocalDate())) {
+        0L -> "hoy a las $hora"
+        1L -> "ayer a las $hora"
+        else -> "el ${fechaCorta(f.toLocalDate().toString(), ahora.toLocalDate())} a las $hora"
+    }
+}
+
+/** Horas desde la revisión (null si la fecha no es válida). */
+fun horasDesdeRevision(iso: String, ahora: java.time.Instant = java.time.Instant.now()): Double? =
+    runCatching { java.time.Duration.between(java.time.OffsetDateTime.parse(iso).toInstant(), ahora).toMinutes() / 60.0 }.getOrNull()
