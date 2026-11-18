@@ -22,6 +22,7 @@ import mx.acomo.app.data.indice
 import mx.acomo.app.data.fechaDatos
 import mx.acomo.app.ui.PantallaAjustes
 import mx.acomo.app.ui.PantallaDetalle
+import mx.acomo.app.ui.PantallaGasolina
 import mx.acomo.app.ui.PantallaMandado
 import mx.acomo.app.ui.PantallaLista
 import mx.acomo.app.ui.PantallaMercados
@@ -61,6 +62,7 @@ private fun App(vm: PreciosViewModel, productoInicial: String?) {
     var elegirMercado by rememberSaveable { mutableStateOf(false) }
     var ajustes by rememberSaveable { mutableStateOf(false) }
     var mandado by rememberSaveable { mutableStateOf(false) }
+    var gasolina by rememberSaveable { mutableStateOf(false) }
 
     val producto = productoId?.let { id -> estado.datosActuales?.productos?.find { it.id == id } }
     val indice = estado.indice
@@ -125,6 +127,17 @@ private fun App(vm: PreciosViewModel, productoInicial: String?) {
                 onVolver = { mandado = false },
             )
         }
+        gasolina -> {
+            BackHandler { gasolina = false }
+            PantallaGasolina(
+                datos = estado.gasolina,
+                cargando = estado.cargandoGasolina,
+                error = estado.errorGasolina,
+                mercado = mercado,
+                onCargar = { vm.cargarGasolina() },
+                onVolver = { gasolina = false },
+            )
+        }
         ajustes -> {
             BackHandler { ajustes = false }
             val compra by vm.compra.collectAsStateWithLifecycle()
@@ -166,6 +179,7 @@ private fun App(vm: PreciosViewModel, productoInicial: String?) {
             onAbrirMisPrecios = { misPrecios = true },
             onAbrirAjustes = { ajustes = true },
             onAbrirMandado = { mandado = true },
+            onAbrirGasolina = { gasolina = true },
         )
     }
 }

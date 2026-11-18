@@ -17,6 +17,7 @@ import mx.acomo.app.EstadoCompra
 import mx.acomo.app.data.AlmacenLocal
 import mx.acomo.app.data.ArticuloMandado
 import mx.acomo.app.data.ListaGuardada
+import mx.acomo.app.data.DatosGasolina
 import mx.acomo.app.data.DatosMercado
 import mx.acomo.app.data.Indice
 import mx.acomo.app.data.Mercado
@@ -54,6 +55,10 @@ data class EstadoUi(
     val avisosTemporada: Boolean = true,
     /** Índice de temporada por producto (varios años de historia). */
     val temporada: Temporada? = null,
+    /** Precios de gasolina (se cargan al abrir la pantalla de gasolina). */
+    val gasolina: DatosGasolina? = null,
+    val cargandoGasolina: Boolean = false,
+    val errorGasolina: String? = null,
 ) {
     val mercadoActual: Mercado? get() = indice?.mercados?.find { it.id == mercado }
 
@@ -122,6 +127,30 @@ class PreciosViewModel(app: Application) : AndroidViewModel(app) {
             _estado.update { it.copy(cargando = false, error = error?.let { mensajeError() }) }
             // Cambia una vez al año; si falla, se queda la copia guardada.
             runCatching { repo.descargarTemporada() }.onSuccess { tem -> _estado.update { it.copy(temporada = tem) } }
+        }
+    }
+
+    /** Copia guardada al instante; descarga otra si no hay o tiene más de 6 horas (los precios cambian a diario). */
+    fun cargarGasolina(forzar: Boolean = false) {
+        if (_estado.value.cargandoGasolina) return
+        viewModelScope.launch {
+            if (_estado.value.gasolina == null) {
+                repo.gasolinaCache()?.let { g -> _estado.update { it.copy(gasolina = g) } }
+            }
+            val horas = repo.horasDeCopia("gasolina.json")
+            if (!forzar && _estado.value.gasolina != null && horas != null && horas < 6) return@launch
+            _estado.update { it.copy(cargandoGasolina = true, errorGasolina = null) }
+            val resultado = runCatching { repo.descargarGasolina() }
+            _estado.update {
+                it.copy(
+                    gasolina = resultado.getOrNull() ?: it.gasolina,
+                    cargandoGasolina = false,
+                    errorGasolina = resultado.exceptionOrNull()?.let { _ ->
+                        if (it.gasolina != null) "Sin conexión: mostrando los últimos precios guardados."
+                        else "No se pudieron descargar los precios de gasolina. Revisa tu conexión."
+                    },
+                )
+            }
         }
     }
 

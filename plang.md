@@ -182,7 +182,15 @@ Ordenadas de más fácil a más trabajo:
    *Investigado el 2026-11-17:* el portal qqp.profeco.gob.mx permite consultar, pero no se encontró una descarga
    CSV oficial actualizada. Pendiente; mientras tanto, los registros de "Mis precios" sirven para calibrar.
 
-### Fase 6: Gasolina (propuesta del 2026-11-17)
+### ✔ Fase 6: Gasolina (hecha el 2026-11-17)
+* `recolector/gasolina.py` + `.github/workflows/actualizar-gasolina.yml` (diario 13:00 UTC; mismo grupo de
+  concurrencia que el SNIIM y `git pull --rebase` antes del push) → `data/gasolina.json`, una gasolinera por línea
+  (13,829 gasolineras, ~1.3 MB, ~320 KB comprimido). Precios fuera de 0.75–1.35 × la mediana nacional se descartan.
+* App: botón ⛽ en la lista → pantalla "Gasolina": ubicación aproximada o centro de la ciudad de la central;
+  Magna/Premium/Diésel; radio 3/5/10 km; resumen (más barata, promedio, ahorro por tanque de 40 L); "Ir" abre Maps.
+  Copia guardada; se vuelve a descargar si tiene más de 6 h.
+
+#### Notas de la propuesta
 * **Fuente:** datos abiertos del regulador de energía (antes CRE, ahora CNE), libre uso:
   * `https://publicacionexterna.azurewebsites.net/publicaciones/places` — cada gasolinera con `place_id`, razón social, `cre_id` y coordenadas.
   * `https://publicacionexterna.azurewebsites.net/publicaciones/prices` — precio vigente por `place_id`: regular (Magna), premium, diésel.

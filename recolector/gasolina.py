@@ -109,7 +109,7 @@ def main() -> None:
     lineas = ",\n".join(json.dumps(e, ensure_ascii=False, separators=(",", ":")) for e in estaciones)
     texto = json.dumps(cabecera, ensure_ascii=False, separators=(",", ":"))[:-1] + ',"estaciones":[\n' + lineas + "\n]}\n"
     json.loads(texto)  # valida antes de escribir
-    SALIDA.write_text(texto, encoding="utf-8")
+    SALIDA.write_text(texto, encoding="utf-8", newline="\n")  # LF también en Windows
     print(f"{SALIDA.relative_to(RAIZ)}: {len(estaciones)} gasolineras, {descartados} precios atípicos descartados, "
           f"medianas {', '.join(f'{t} ${m:.2f}' for t, m in medianas.items())}, {SALIDA.stat().st_size // 1024} KB",
           file=sys.stdout)

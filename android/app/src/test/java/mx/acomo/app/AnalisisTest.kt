@@ -25,6 +25,12 @@ import mx.acomo.app.data.articuloPorPiezas
 import mx.acomo.app.data.alternativas
 import mx.acomo.app.data.sugerenciasCambio
 import mx.acomo.app.data.bajadas
+import mx.acomo.app.data.DatosGasolina
+import mx.acomo.app.data.Estacion
+import mx.acomo.app.data.Combustible
+import mx.acomo.app.data.cercanas
+import mx.acomo.app.data.resumenGasolina
+import mx.acomo.app.data.distancia
 import mx.acomo.app.data.Temporada
 import mx.acomo.app.data.rangoMeses
 import mx.acomo.app.data.mesesBaratos
@@ -106,6 +112,25 @@ class AnalisisTest {
         val limon5 = prod("Limón c/semilla # 5", 18.0, 15.0)
         val sinSemilla = prod("Limón s/semilla", 22.0, 20.0)
         assertEquals(listOf("Limón s/semilla"), alternativas(limon4, listOf(limon4, limon5, sinSemilla)).map { it.producto.nombre })
+    }
+
+    @Test fun gasolina() {
+        // Centro de Toluca y tres gasolineras: a ~1 km, a ~3 km y una lejana (CDMX, ~55 km).
+        val datos = DatosGasolina(estaciones = listOf(
+            Estacion(1, 19.2925, -99.6560, "Cerca cara", r = 24.50, p = 28.0),
+            Estacion(2, 19.3100, -99.6400, "Barata", r = 22.30),
+            Estacion(3, 19.4326, -99.1332, "Lejos", r = 21.00, d = 26.0),
+        ))
+        val cerca = datos.cercanas(19.2850, -99.6550, 5.0, Combustible.MAGNA)
+        assertEquals(listOf(2, 1), cerca.map { it.estacion.i })        // por precio; la lejana no entra
+        assertTrue(cerca.all { it.km < 5 })
+        assertTrue(datos.cercanas(19.2850, -99.6550, 5.0, Combustible.DIESEL).isEmpty())
+        assertEquals(listOf(1), datos.cercanas(19.2850, -99.6550, 5.0, Combustible.PREMIUM).map { it.estacion.i })
+        val r = resumenGasolina(cerca)!!
+        assertEquals(88.0, r.ahorroTanque, 0.001)                    // (24.50 - 22.30) × 40
+        assertEquals("350 m", distancia(0.37))
+        assertEquals("2.3 km", distancia(2.34))
+        assertEquals("12 km", distancia(12.8))
     }
 
     @Test fun temporada() {

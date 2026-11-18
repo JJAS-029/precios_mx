@@ -82,6 +82,7 @@ fun PantallaLista(
     onAbrirMisPrecios: () -> Unit,
     onAbrirAjustes: () -> Unit,
     onAbrirMandado: () -> Unit,
+    onAbrirGasolina: () -> Unit,
 ) {
     var busqueda by rememberSaveable { mutableStateOf("") }
     val teclado = LocalSoftwareKeyboardController.current
@@ -106,6 +107,7 @@ fun PantallaLista(
                 },
                 actions = {
                     TextButton(onClick = onAbrirMisPrecios) { Text("Mis precios", fontWeight = FontWeight.Bold) }
+                    IconButton(onClick = onAbrirGasolina) { Text("⛽", style = MaterialTheme.typography.titleLarge) }
                     IconButton(onClick = onAbrirMandado) {
                         androidx.compose.material3.BadgedBox(
                             badge = {

@@ -32,6 +32,13 @@ class Repositorio(
 
     suspend fun descargarIndice(): Indice = descargar("indice.json")
     suspend fun descargarTemporada(): Temporada = descargar("temporada.json")
+
+    suspend fun gasolinaCache(): DatosGasolina? = leer("gasolina.json")
+    suspend fun descargarGasolina(): DatosGasolina = descargar("gasolina.json")
+
+    /** Antigüedad de la copia guardada de un archivo, en horas (null si no hay copia). */
+    fun horasDeCopia(ruta: String): Double? =
+        archivo(ruta).takeIf { it.exists() }?.let { (System.currentTimeMillis() - it.lastModified()) / 3_600_000.0 }
     suspend fun descargarMercado(id: String): DatosMercado = descargar("mercados/$id.json")
 
     private suspend inline fun <reified T> leer(ruta: String): T? = withContext(Dispatchers.IO) {

@@ -52,6 +52,7 @@ Antes de cada versión nueva, subir `versionCode` (y `versionName`) en `app/buil
 > • "Está caro, mejor cambia": si el jitomate subió, te dice qué sustituto está barato.
 > • Mi mandado: arma tu lista, calcula cuánto vas a gastar y compártela por WhatsApp.
 > • Avisos: te llega una notificación cuando baja un producto que sigues.
+> • Gasolina: las gasolineras más baratas cerca de ti (Magna, Premium y Diésel).
 > • Mis precios: guarda lo que pagaste y compáralo.
 > • Gráfica de 12 semanas y comparación con mercados cercanos.
 > • Funciona sin internet con los últimos precios descargados.
