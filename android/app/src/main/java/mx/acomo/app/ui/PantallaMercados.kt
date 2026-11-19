@@ -178,6 +178,7 @@ fun PantallaMercados(
                     color = if (aviso != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(16.dp, 6.dp),
                 )
+                FuenteSniim("Precios de mayoreo de las centrales de abasto.", Modifier.padding(16.dp, 2.dp))
             }
             if (lat != null && busqueda.isBlank()) {
                 item {

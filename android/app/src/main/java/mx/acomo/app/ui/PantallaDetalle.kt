@@ -231,13 +231,11 @@ fun PantallaDetalle(
                 }
             }
 
-            Text(
-                "Fuente: SNIIM, Secretaría de Economía. Precio de mayoreo en " +
+            FuenteSniim(
+                "Precio de mayoreo en " +
                     (if (producto.regionReferencia != null) "centros de distribución, " else "central de abasto, ") +
                     "calculado por kilogramo. En mercados y tianguis es normal pagar más por el transporte y la venta al menudeo.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(16.dp),
+                Modifier.padding(16.dp),
             )
         }
     }

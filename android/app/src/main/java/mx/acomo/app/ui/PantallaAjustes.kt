@@ -179,9 +179,12 @@ fun PantallaAjustes(
                 }
             }
 
+            Titulo("Fuentes oficiales y aviso")
+            SeccionFuentes()
+
             Titulo("Acerca de")
             Text(
-                "Precios de mayoreo del SNIIM (Secretaría de Economía), actualizados cada semana. " +
+                "Precios de mayoreo actualizados cada semana; gasolina, cada día. " +
                     "El precio justo de menudeo es un estimado.\n\nVersión ${BuildConfig.VERSION_NAME}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

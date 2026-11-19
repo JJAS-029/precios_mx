@@ -229,12 +229,7 @@ fun PantallaLista(
                     }
                 }
                 item {
-                    Text(
-                        "Fuente: SNIIM, Secretaría de Economía. Precios de mayoreo por kg.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(16.dp),
-                    )
+                    FuenteSniim("Precios de mayoreo por kg.", Modifier.padding(16.dp))
                 }
             }
         }

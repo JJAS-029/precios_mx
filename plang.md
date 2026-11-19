@@ -152,6 +152,11 @@ Logo del koala e íconos (`diseno/`), "Mis precios" para guardar lo que pagaste 
 * Probar: `adb shell bmgr backupnow mx.acomo.app`, desinstalar, reinstalar → los datos vuelven.
 
 ### ⏳ Fase 4: Antes de publicar en Google Play
+* ⚠ **Rechazo del 2026-11-18 (política de afirmaciones engañosas):** faltaban enlaces a las fuentes gubernamentales y
+  una renuncia de que la app no representa a ninguna entidad pública. Corregido en la versión 8: sección "Fuentes
+  oficiales y aviso" en Ajustes, fuente enlazada al pie de la lista, el detalle, la gasolina y el selector de mercado
+  (`ui/Fuentes.kt`), descripción de la ficha con "FUENTES OFICIALES" y "AVISO" (ver `diseno/PUBLICAR.md`) y lo mismo
+  en la página del sitio.
 * ✔ Cuenta de desarrollador de Google Play: ya existe.
 * 📝 **Testers (pendiente, se ve más adelante):** las cuentas personales nuevas deben hacer una prueba cerrada con al menos 12 testers durante 14 días antes de poder publicar en producción. Ir juntando correos de familiares y amigos con Android.
 * ✔ Firma de la app (llave de subida local, fuera de git) y compilación release (`.aab`) verificada en el emulador. Guía paso a paso: `diseno/PUBLICAR.md`.

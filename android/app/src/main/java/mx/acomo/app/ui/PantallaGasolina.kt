@@ -254,12 +254,13 @@ fun PantallaGasolina(
                 }
             }
             item {
-                Text(
-                    "Fuente: Comisión Nacional de Energía (antes CRE), precios vigentes que reporta cada gasolinera. " +
-                        "La CNE no publica cuándo cambió cada precio, así que en la bomba puede ser distinto. " +
-                        "Tu ubicación solo se usa en tu teléfono.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                TextoConEnlaces(
+                    "Fuente: Comisión Nacional de Energía, antes CRE (",
+                    "gob.mx/cne" to Fuentes.CNE,
+                    " · ",
+                    "datos de precios" to Fuentes.CNE_PRECIOS,
+                    "), precios vigentes que reporta cada gasolinera. La CNE no publica cuándo cambió cada precio, " +
+                        "así que en la bomba puede ser distinto. Tu ubicación solo se usa en tu teléfono. No es una app del gobierno.",
                     modifier = Modifier.padding(16.dp),
                 )
             }

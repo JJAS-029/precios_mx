@@ -37,29 +37,29 @@ Antes de cada versión nueva, subir `versionCode` (y `versionName`) en `app/buil
 
 **Nombre (30):** ¿A cómo? Precios de mercado
 
-**Descripción corta (80):** ¿Te están cobrando de más? Compara con los precios oficiales de mayoreo.
+**Descripción corta (80):** ¿Te están cobrando de más? Compara con los precios de mayoreo del SNIIM.
 
-**Descripción completa:**
+**Descripción completa** (rechazada el 2026-11-18 por "afirmaciones engañosas" porque no enlazaba las fuentes
+gubernamentales ni decía que la app no representa a ninguna entidad pública; esta versión lo corrige):
 > ¿A cómo está el jitomate? ¿Te están cobrando de más por el aguacate?
 >
-> ¿A cómo? te muestra cada semana los precios oficiales de mayoreo de frutas, verduras y chiles en
-> las centrales de abasto de todo México (datos del SNIIM, Secretaría de Economía), para que sepas
-> cuánto es un precio justo en el mercado o tianguis.
+> ¿A cómo? te muestra los precios de mayoreo de frutas, verduras, chiles, huevo y pollo en las centrales de abasto de México, con datos públicos del SNIIM (Secretaría de Economía), para que sepas cuánto es un precio justo en el mercado o tianguis. También te dice dónde está la gasolina más barata cerca de ti.
 >
 > • Más de 40 centrales de abasto: elige la tuya o usa tu ubicación.
 > • Semáforo: escribe lo que te cobran y ve si es buen precio, un poco caro o caro.
-> • "Barato esta semana": lo que bajó de precio.
+> • "Barato esta semana" y "De temporada": lo que bajó y lo que suele estar barato este mes.
 > • "Está caro, mejor cambia": si el jitomate subió, te dice qué sustituto está barato.
-> • Mi mandado: arma tu lista, calcula cuánto vas a gastar y compártela por WhatsApp.
-> • Avisos: te llega una notificación cuando baja un producto que sigues.
+> • Mapa de precios por estado y por central, y gráfica de 1 mes a 1 año.
+> • Mi mandado: arma tu lista (por kilo o por pieza), calcula cuánto vas a gastar y compártela.
+> • Favoritos y avisos cuando baja un producto que sigues.
 > • Gasolina: las gasolineras más baratas cerca de ti (Magna, Premium y Diésel).
-> • Mis precios: guarda lo que pagaste y compáralo.
-> • Gráfica de 12 semanas y comparación con mercados cercanos.
-> • Funciona sin internet con los últimos precios descargados.
-> • Modo oscuro.
+> • Funciona sin internet con los últimos precios descargados. Modo oscuro.
 >
-> Los precios de mayoreo son datos públicos del SNIIM. El precio de menudeo es un estimado.
-> Esta app no está afiliada a la Secretaría de Economía.
+> FUENTES OFICIALES
+> • Precios de mayoreo: Sistema Nacional de Información e Integración de Mercados (SNIIM), Secretaría de Economía — https://www.economia-sniim.gob.mx
+> • Precios de gasolina y diésel: Comisión Nacional de Energía (antes CRE) — https://www.gob.mx/cne
+>
+> AVISO: ¿A cómo? es una app independiente. No representa a ninguna entidad pública ni está afiliada al Gobierno de México, la Secretaría de Economía ni la Comisión Nacional de Energía. Los precios de menudeo, el semáforo y la temporada son estimados de la app.
 
 **Categoría:** Compras. **Sitio web:** `https://jjas-029.github.io/acomo/` · **Condiciones:** `https://jjas-029.github.io/acomo/condiciones.html`.
 
