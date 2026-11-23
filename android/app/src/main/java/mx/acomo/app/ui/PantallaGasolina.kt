@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -89,6 +90,8 @@ fun PantallaGasolina(
     var punto by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var desdeUbicacion by rememberSaveable { mutableStateOf(false) }
     var buscando by remember { mutableStateOf(false) }
+    var verMapa by rememberSaveable { mutableStateOf(false) }
+    var elegida by rememberSaveable { mutableStateOf<Int?>(null) }
 
     fun ubicar() {
         buscando = true
@@ -112,6 +115,11 @@ fun PantallaGasolina(
                 navigationIcon = {
                     IconButton(onClick = onVolver) { Text("←", style = MaterialTheme.typography.titleLarge) }
                 },
+                actions = {
+                    TextButton(onClick = { verMapa = !verMapa }) {
+                        Text(if (verMapa) "☰ Lista" else "🗺 Mapa", fontWeight = FontWeight.Bold)
+                    }
+                },
             )
         },
     ) { padding ->
@@ -127,55 +135,113 @@ fun PantallaGasolina(
             runCatching { contexto.startActivity(Intent(Intent.ACTION_VIEW, uri)) }
             Unit
         }
-        LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
-            item {
-                Column(Modifier.padding(horizontal = 16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+        val controles: @Composable () -> Unit = {
+            Column(Modifier.padding(horizontal = 16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        when {
+                            desdeUbicacion -> "📍 Cerca de tu ubicación"
+                            mercado != null -> "📍 Cerca de ${mercado.ciudad} (centro)"
+                            else -> "📍 Elige un mercado o usa tu ubicación"
+                        },
+                        Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    if (!desdeUbicacion) {
+                        TextButton(onClick = {
+                            if (tienePermisoUbicacion(contexto)) ubicar()
+                            else pedirPermiso.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+                        }) { Text(if (buscando) "Buscando…" else "Usar mi ubicación") }
+                    }
+                }
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                    Combustible.entries.forEachIndexed { i, c ->
+                        SegmentedButton(
+                            selected = c == tipo,
+                            onClick = { tipo = c },
+                            shape = SegmentedButtonDefaults.itemShape(i, Combustible.entries.size),
+                        ) { Text(c.nombre, maxLines = 1) }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
+                    RADIOS.forEach { r ->
+                        FilterChip(selected = r == radio, onClick = { radio = r }, label = { Text("${r.toInt()} km") })
+                    }
+                }
+                datos?.let { d ->
+                    val cuando = revisadoGasolina(d.generado)
+                    val viejo = (horasDesdeRevision(d.generado) ?: 0.0) > 48
+                    if (cuando.isNotBlank()) {
                         Text(
-                            when {
-                                desdeUbicacion -> "📍 Cerca de tu ubicación"
-                                mercado != null -> "📍 Cerca de ${mercado.ciudad} (centro)"
-                                else -> "📍 Elige un mercado o usa tu ubicación"
-                            },
-                            Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleSmall,
+                            "🕒 Precios revisados en la CNE $cuando" +
+                                if (viejo) ". Pueden estar desactualizados." else "",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (viejo) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 4.dp),
                         )
-                        if (!desdeUbicacion) {
-                            TextButton(onClick = {
-                                if (tienePermisoUbicacion(contexto)) ubicar()
-                                else pedirPermiso.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
-                            }) { Text(if (buscando) "Buscando…" else "Usar mi ubicación") }
-                        }
                     }
-                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                        Combustible.entries.forEachIndexed { i, c ->
-                            SegmentedButton(
-                                selected = c == tipo,
-                                onClick = { tipo = c },
-                                shape = SegmentedButtonDefaults.itemShape(i, Combustible.entries.size),
-                            ) { Text(c.nombre, maxLines = 1) }
-                        }
+                }
+            }
+        }
+        if (verMapa) {
+            Column(Modifier.padding(padding).fillMaxSize()) {
+                controles()
+                error?.let { msg ->
+                    Text(msg, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(16.dp, 4.dp))
+                }
+                when {
+                    datos == null && cargando -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        LoadingIndicator(Modifier.size(56.dp))
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
-                        RADIOS.forEach { r ->
-                            FilterChip(selected = r == radio, onClick = { radio = r }, label = { Text("${r.toInt()} km") })
-                        }
-                    }
-                    datos?.let { d ->
-                        val cuando = revisadoGasolina(d.generado)
-                        val viejo = (horasDesdeRevision(d.generado) ?: 0.0) > 48
-                        if (cuando.isNotBlank()) {
-                            Text(
-                                "🕒 Precios revisados en la CNE $cuando" +
-                                    if (viejo) ". Pueden estar desactualizados." else "",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = if (viejo) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 4.dp),
+                    datos == null -> TextButton(onClick = onCargar, modifier = Modifier.padding(16.dp)) { Text("Reintentar") }
+                    origen == null -> Text("Elige un mercado o usa tu ubicación.", modifier = Modifier.padding(16.dp))
+                    else -> {
+                        val visibles = remember(lista, misGasolineras) { (lista + misGasolineras).distinctBy { it.estacion.i } }
+                        LeyendaGasolineras(Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+                        Box(Modifier.weight(1f).fillMaxWidth()) {
+                            MapaGasolineras(
+                                gasolineras = visibles,
+                                centro = origen,
+                                radioKm = radio,
+                                yo = if (desdeUbicacion) punto else null,
+                                favoritas = favoritas.keys,
+                                elegida = elegida,
+                                onElegir = { elegida = it },
+                                modifier = Modifier.fillMaxSize(),
                             )
+                            visibles.find { it.estacion.i == elegida }?.let { g ->
+                                Card(
+                                    shape = MaterialTheme.shapes.large,
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+                                    modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(12.dp),
+                                ) {
+                                    FilaGasolinera(
+                                        g,
+                                        esLaMasBarata = g.estacion.i == lista.firstOrNull()?.estacion?.i,
+                                        favorita = g.estacion.i.toString() in favoritas,
+                                        onFavorita = { onFavorita(g.estacion) },
+                                        diferencia = lista.firstOrNull()?.let { g.precio - it.precio }
+                                            ?.takeIf { g.estacion.i != lista.first().estacion.i },
+                                    ) { abrirMapa(g) }
+                                }
+                            }
+                            if (lista.isEmpty()) {
+                                Text(
+                                    "No hay gasolineras con precio de ${tipo.nombre} a menos de ${radio.toInt()} km.",
+                                    modifier = Modifier.align(Alignment.TopCenter).padding(12.dp)
+                                        .background(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.shapes.medium)
+                                        .padding(12.dp),
+                                )
+                            }
                         }
                     }
                 }
             }
+            return@Scaffold
+        }
+        LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
+            item { controles() }
             error?.let { msg ->
                 item {
                     Text(

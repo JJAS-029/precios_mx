@@ -26,8 +26,8 @@ android {
         applicationId = "mx.acomo.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "0.4.2"
+        versionCode = 9
+        versionName = "0.5.0"
 
         // Carpeta de datos generada por el recolector (GitHub Actions).
         buildConfigField(
@@ -90,6 +90,7 @@ dependencies {
     implementation(libs.play.services.ads)
     implementation(libs.androidx.work.runtime)
     implementation(libs.billing.ktx)
+    implementation(libs.maplibre)
     debugImplementation(libs.androidx.ui.tooling)
     testImplementation(libs.junit)
 }

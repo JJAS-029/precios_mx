@@ -195,6 +195,9 @@ Ordenadas de más fácil a más trabajo:
   Magna/Premium/Diésel; radio 3/5/10 km; resumen (más barata, promedio, ahorro por tanque de 40 L); "Ir" abre Maps.
   Copia guardada; se vuelve a descargar si tiene más de 6 h.
 * Fecha de revisión visible arriba ("Precios revisados en la CNE hoy a las 7:05", en rojo si tiene más de 2 días).
+* **Mapa de gasolineras** (versión 9): botón "🗺 Mapa / ☰ Lista". MapLibre 13.7.1 con mapas de OpenFreeMap
+  (positron / dark; sin clave ni cuenta). Puntos por quintil de precio entre las visibles (azul → rojo), precio
+  junto al punto desde zoom 12, favoritas con borde dorado, ubicación en azul; tocar un punto muestra la tarjeta.
 * Gasolineras favoritas (☆ en cada fila): sección "★ Mis gasolineras" con su precio de hoy aunque estén fuera del
   radio y cuánto cuestan de más que la más barata cercana. Se guardan en las preferencias (entran al respaldo de Google).
 
