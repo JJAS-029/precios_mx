@@ -90,6 +90,11 @@ fun PantallaGasolina(
     var punto by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var desdeUbicacion by rememberSaveable { mutableStateOf(false) }
     var buscando by remember { mutableStateOf(false) }
+    // El mapa (MapLibre, OpenGL) necesita OpenGL ES 3.0; casi todos los teléfonos con Android 8+ lo tienen.
+    val mapaDisponible = remember {
+        (contexto.getSystemService(android.app.ActivityManager::class.java)
+            ?.deviceConfigurationInfo?.reqGlEsVersion ?: 0) >= 0x30000
+    }
     var verMapa by rememberSaveable { mutableStateOf(false) }
     var elegida by rememberSaveable { mutableStateOf<Int?>(null) }
 
@@ -116,7 +121,7 @@ fun PantallaGasolina(
                     IconButton(onClick = onVolver) { Text("←", style = MaterialTheme.typography.titleLarge) }
                 },
                 actions = {
-                    TextButton(onClick = { verMapa = !verMapa }) {
+                    if (mapaDisponible) TextButton(onClick = { verMapa = !verMapa }) {
                         Text(if (verMapa) "☰ Lista" else "🗺 Mapa", fontWeight = FontWeight.Bold)
                     }
                 },
@@ -183,7 +188,7 @@ fun PantallaGasolina(
                 }
             }
         }
-        if (verMapa) {
+        if (verMapa && mapaDisponible) {
             Column(Modifier.padding(padding).fillMaxSize()) {
                 controles()
                 error?.let { msg ->

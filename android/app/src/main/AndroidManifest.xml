@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Solo ubicación aproximada, para sugerir la central de abasto más cercana. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Avisos cuando baja un producto que el usuario sigue (Android 13+ lo pide al usuario). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- MapLibre pide estos permisos para su propio seguimiento de ubicación, que no usamos:
+         la app solo usa la ubicación aproximada y nunca el estado del Wi-Fi. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" tools:node="remove" />
 
     <application
         android:allowBackup="true"

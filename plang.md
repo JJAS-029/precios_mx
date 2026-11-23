@@ -195,6 +195,10 @@ Ordenadas de más fácil a más trabajo:
   Magna/Premium/Diésel; radio 3/5/10 km; resumen (más barata, promedio, ahorro por tanque de 40 L); "Ir" abre Maps.
   Copia guardada; se vuelve a descargar si tiene más de 6 h.
 * Fecha de revisión visible arriba ("Precios revisados en la CNE hoy a las 7:05", en rojo si tiene más de 2 días).
+* ⚠ La versión 9 usaba `org.maplibre.gl:android-sdk`, que **exige Vulkan** (Play dejaba fuera 4,122 dispositivos) y
+  agrega `ACCESS_FINE_LOCATION` y `ACCESS_WIFI_STATE`. Versión 10: variante `android-sdk-opengl`, esos permisos
+  quitados con `tools:node="remove"` y el botón de mapa oculto si el teléfono no tiene OpenGL ES 3.0. La advertencia
+  de "símbolos de depuración" de Play se queda: MapLibre viene sin símbolos y no afecta.
 * **Mapa de gasolineras** (versión 9): botón "🗺 Mapa / ☰ Lista". MapLibre 13.7.1 con mapas de OpenFreeMap
   (positron / dark; sin clave ni cuenta). Puntos por quintil de precio entre las visibles (azul → rojo), precio
   junto al punto desde zoom 12, favoritas con borde dorado, ubicación en azul; tocar un punto muestra la tarjeta.
